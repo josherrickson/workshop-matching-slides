@@ -33,7 +33,7 @@ http://cscar.research.umich.edu
 2. Separating PS and matching
 3. Introduction to `optmatch`
 4. Optimal and full matching
-5. Building a distance matrix
+5. Speeding up matching
 6. Final example
 
 # Review of Matching
