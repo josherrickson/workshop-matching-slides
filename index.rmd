@@ -173,7 +173,7 @@ xbal2
 
 ----
 
-```{r}
+```{r, out.height = 500, fig.height = 5}
 xbal2 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
                                                  match = ~ match),
                   data = d, report = "all")
@@ -229,7 +229,7 @@ xbal3
 
 ----
 
-```{r}
+```{r, out.height = 500, fig.height = 5}
 xbal3 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
                                                  match1 = ~ match,
                                                  match2 = ~ match2),
@@ -303,7 +303,7 @@ xbal4
 
 ----
 
-```{r}
+```{r, out.height = 500, fig.height = 5}
 xbal4 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
                    full1 = ~ fullmatch1, full2 = ~fullmatch2),
                   data = d, report = "all")
