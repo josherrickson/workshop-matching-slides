@@ -1,0 +1,559 @@
+---
+title: "Matching with R: Strategies for larger data"
+author: Josh Errickson
+date: December 7, 2016
+output: 
+  ioslides_presentation:
+    transition: 0.1
+bibliography: bib.bib
+---
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+options(digits = 4)
+library(lme4)
+library(pander)
+library(ggplot2)
+```
+
+
+----
+
+![](cscar.png)
+
+http://cscar.research.umich.edu
+
+## Outline
+1. Review of propensity scores and matching
+2. Separating PS and matching
+3. Introduction to `optmatch`
+4. Optimal and full matching
+5. Building a distance matrix
+6. Final example
+
+# Review of Matching
+
+## Goals of Matching
+
+"One of the key benefits of randomized experiments for estimating causal effects is that the treated and control groups are guaranteed to be only randomly different from one another on all background covariates, both observed and unobserved. Work on matching methods has examined how to replicate this as much as possible for observed covariates with observational (non-randomized) data."[@stuart2010matching]
+
+## Balance
+
+- Is distribution of covariates is the same in both groups?
+    - Observed vs unobserved.
+
+```{r, echo = FALSE}
+x1 <- rbeta(100, 10, 1)
+x2 <- rbeta(100, 1, 2)
+d <- data.frame(x = c(x1, x2), group = factor(rep(letters[1:2], each = 100)))
+ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
+```
+
+## Love plot
+
+```{r, echo = FALSE, message = FALSE}
+library(RItools)
+data(nuclearplants)
+plot(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearplants))
+```
+
+## Distance
+
+- Can define distance however you want
+- Common choices:
+    - Euclidean
+    - Mahalanobis
+
+## Measuring match quality
+
+- Formal goal: Balance
+- Intermediate goal: Total distance
+- Strong correlation
+- Can use total distance to find a good match, and check it with balance.
+
+## Propensity Score Matching
+
+- Matching on more than one covariate is challenging.
+- \(e(\mathbf{X}) = P(Z = 1 | \mathbf{X})\)
+- PS can be thought of as dimension reduction.
+- PS estimated by logistic regression predicting group membership.
+    - "Kitchen sink"
+
+# Separating Matching and Propensity Scores
+
+## Matching without PS
+
+- If small number of covariates to match on relative to sample size, and covariates have good overlap, can match directly.
+- Treat PS as "just another" variable.
+
+## PS without Matching
+
+- Weighting
+- Subsetting
+- Stratafication
+- ...
+
+# Introduction to `optmatch` and `RItools`
+
+## `optmatch`
+
+- Package for optimal full matching (both terms to be defined).
+- Simplest form:
+
+```{r, echo = FALSE}
+d <- data.frame(group = c(0,0,0,0,0,0,0,0,1,1,1),
+                x1 = c(2,4,3,5,6,3,4,1,0,1,3),
+                x2 = c(3,2,1,2,3,1,2,4,6,4,7))
+op <- options()
+options(str = strOptions(vec.len = 6))
+```
+
+```{r, message = FALSE}
+#install.packages("optmatch")
+library(optmatch)
+str(d)
+d$match <- pairmatch(group ~ x1 + x2, data = d)
+```
+
+```{r, echo = FALSE}
+options(op)
+```
+
+----
+
+- Generates a `factor` variable identifying match membership, or `NA`.
+
+```{r}
+d$match
+summary(d$match)
+```
+
+- Can be used in analysis, for example (not executed):
+
+```{r, eval = FALSE}
+lm(y ~ x1 + x2 + match, data = d)
+```
+
+## `RItools`
+
+- A collection of useful function for randomization inference
+- Most useful for `xBalance` function
+    - Checks balance and `plot`ing the result of `xBalance` will produce a Love plot.
+
+----
+
+```{r, message = FALSE}
+#install.packages("RItools")
+library(RItools)
+xbal <- xBalance(group ~ x1 + x2, data = d, report = "all")
+xbal
+```
+
+----
+
+```{r}
+plot(xbal)
+```
+
+---- 
+
+- Now compare the unmatched data to the matched data.
+
+```{r}
+xbal2 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
+                                                 match = ~ match),
+                  data = d, report = "chisq")
+xbal2
+```
+
+----
+
+```{r}
+xbal2 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
+                                                 match = ~ match),
+                  data = d, report = "all")
+plot(xbal2, color = 1:2)
+```
+    
+# Optimal and Full matching
+
+## Optimal matching
+
+- Greedy matching matches well on first few values, but can suffer later on.
+    - Often a sub-optimal early match can improve many later matches.
+    - Shuffle the data...
+- A optimal match is equivalent to considering **all** possible matching structures.
+- Optimal is a harder problem but almost always produces better matches
+- `optmatch` package uses optimal matching.
+- Distrust any method which uses greedy matching!
+
+## `j`:`k` notation
+
+- Pair matched data is 1:1 - a single treatment to a single control.
+- 1:2 would mean each treatment member shares two controls.
+- 3:1 means three treatment members share a single control.
+- 1:`k` or `k`:1 always better than `j`:`k`
+
+## 1:`k` and `k`:1 matching
+
+- Optimal pair matching useful if sample sizes are close - easy to interpret.
+- Not good if one group is much larger.
+    - Loses data
+- 1:`k` or `k`:1 matching allows less data loss.
+
+## 1:`k` or `k`:1 matching in `optmatch`
+
+- `controls` argument to `pairmatch`
+    - 2, 3, 4, etc for 1:`k`
+    - 1/2, 1/3, 1/4, etc for `k`:1.
+
+```{r}
+d$match2 <- pairmatch(group ~ x1 + x2, controls = 2, data = d)
+summary(d$match2)
+```
+
+----
+
+```{r}
+xbal3 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
+                                                 match1 = ~ match,
+                                                 match2 = ~ match2),
+                  data = d, report = "chisq")
+xbal3
+```
+
+----
+
+```{r}
+xbal3 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
+                                                 match1 = ~ match,
+                                                 match2 = ~ match2),
+                  data = d, report = "all")
+plot(xbal3, color = 1:3)
+```
+
+----
+
+```{r, eval = FALSE}
+pairmatch(group ~ x1 + x2, data = d, controls = 3)
+```
+Produces:
+```
+Error in pairmatch.matrix(m, controls = controls, data = mfd, 
+  remove.unmatchables = remove.unmatchables, : not enough 
+  controls in some subclasses
+```
+
+
+
+## Issues with 1:`k` or `k`:1 matching
+
+- Even with 1:`k`, can still lose up to \((n_c - k*n_t)\) data .
+   - E.g., 10 treatment, 67 controls, 1:6 matching loses 7 controls.
+- 1:`k` may not always be best - sometimes 1:`j`?
+
+Treatment | Control
+:--------:|:------:
+5         |  4
+10        |  5
+          || 6
+          || 11
+
+## Fullmatching
+
+- Allow 1:`k` or `k`:1 where `k` can vary per set.
+
+```{r}
+d$fullmatch1 <- fullmatch(group ~ x1 + x2, data = d)
+summary(d$fullmatch)
+```
+
+- Guaranteed to find the best possible match.
+- Best may not be useful: 99:1 and 1:99.
+
+----
+
+- Instead we set bounds, e.g. all sets between 2:1 and 1:3.
+
+```{r}
+d$fullmatch2 <- fullmatch(group ~ x1 + x2, 
+                          max.controls = 3, 
+                          min.controls = 1/2,
+                          data = d)
+summary(d$fullmatch2)
+```
+
+----
+
+```{r}
+xbal4 <- xBalance(group ~ x1 + x2, 
+                  strata = list(unmatched = NULL,
+#                               match1 = ~ match,
+#                               match2 = ~ match2,
+                                full1 = ~ fullmatch1,
+                                full2 = ~ fullmatch2),
+                  data = d, report = "chisq")
+xbal4
+```
+
+----
+
+```{r}
+xbal4 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
+                   full1 = ~ fullmatch1, full2 = ~fullmatch2),
+                  data = d, report = "all")
+plot(xbal4, color = 1:5)
+```
+
+# Speeding up matching
+
+## Structure
+
+```{r, echo = FALSE}
+dist <- matrix(c(1,4,0, Inf, 2, 5), nrow = 2)
+rownames(dist) <- c("t1", "t2")
+colnames(dist) <- c("c1", "c2", "c3")
+```
+```{r}
+dist
+```
+- Each entry represents a distance.
+- `0` represents identical, `Inf` represents never match.
+- The more `Inf`, the faster matching will run.
+
+----
+
+- Built in `optmatch`, similar notation
+
+```{r}
+m1 <- match_on(group ~ x1 + x2, data = d)
+m1
+```
+## Exact Matching
+
+```{r, echo = FALSE}
+d <- d[,1:3]
+d$gender <- c(0,1,1,0,0,1,0,1,1,0,1)
+op <- options()
+options(str = strOptions(vec.len = 6))
+```
+
+```{r}
+str(d)
+```
+
+```{r, echo = FALSE}
+options(op)
+```
+
+----
+
+```{r}
+em <- exactMatch(group ~ gender, data = d)
+as.matrix(em)
+```
+
+- More useful than just adding a lot of `Inf`'s...
+
+----
+
+- ... because each subproblem can be considered its own matching problem.
+
+```{r}
+em
+```
+
+----
+
+- We can combine distance matrices
+
+```{r}
+m1 + em
+```
+
+- This works for two of any format (exact or regular).
+
+----
+
+- Can be done in a single step as well:
+
+```{r}
+m2 <- match_on(group ~ x1 + x2, data = d,
+               within = em)
+m2
+```
+
+
+## Calipering
+
+- For any pairs with large distances, we may want to either
+    - Ensure they never match.
+        - (Overall match may suffer, but no individual match is terrible.)
+    - Speed up calculations by not checking them.
+  
+----
+
+```{r}
+c1 <- caliper(m1, width = 4)
+c1
+m1 + c1
+```
+
+## Combining it all
+
+```{r}
+mm <- match_on(group ~ x1 + x2, data = d, within = em, caliper = 4)
+mm
+```
+
+- Looks like some unmatchable controls.
+
+----
+
+```{r}
+summary(fullmatch(mm, data = d))
+```
+
+- Yup, 3 unmatchable.
+
+## Discussion
+
+- 3-way trade-off between balance, speed and sample size (power)
+- In general:
+    - More restrictions leads to faster but less balanced matches.
+        - Too many restrictions can reduce power.
+    - Less restrictions leads to slower but more balanced matches.
+        - Too few restrictions can limit usefulness.
+    - Dropping observations leads to more balance matches with lower power.
+    - Including all observations leads to less balanced matches but with higher power.
+    
+# Example
+
+## ECLS data
+
+- Early Childhood Longitudinal Survey
+- Treatment group is catholic school vs public school.
+```{r, echo = FALSE}
+ecls <- read.csv("ecls/ecls.csv")
+ecls <- ecls[complete.cases(ecls),]
+```
+```{r}
+dim(ecls)
+table(ecls$catholic)
+```
+
+----
+
+```{r, echo = FALSE, cache = TRUE}
+eclscomplete <- ecls[complete.cases(ecls),]
+
+full_form <- catholic ~ race_white + race_black + race_hispanic + race_asian + p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr + w3income + w3povrty + p5fstamp
+
+save <- matrix(nrow = 7, ncol = 3)
+colnames(save) <- c("Model",
+                    "Time",
+                    "ESS")
+
+# Model 1: Pairmatching
+s1 <- system.time(pm1 <- pairmatch(full_form, data = eclscomplete))
+save[1,] <- c("Pair match",
+              s1[1],
+              effectiveSampleSize(pm1))
+
+# Model 2: Pairmatching 1:2
+s2 <- system.time(pm2 <- pairmatch(full_form, controls = 2, data = eclscomplete))
+save[2,] <- c("Pair match (1:2)",
+              s2[1],
+              effectiveSampleSize(pm2))
+
+# Model 3: Unrestricted fullmatch
+s3 <- system.time(fm1 <- fullmatch(full_form, data = eclscomplete))
+save[3,] <- c("Full match (unres.)",
+              s3[1],
+              effectiveSampleSize(fm1))
+
+# Model 4: Fullmatch with ExactMatch
+s4 <- system.time({
+  em <- exactMatch(catholic ~ race, data = eclscomplete)
+  dist <- match_on(full_form, within = em, data = eclscomplete)
+  fm2 <- fullmatch(dist, data = eclscomplete)
+})
+save[4,] <- c("Full + Exact",
+              s4[1],
+              effectiveSampleSize(fm2))
+
+# Model 5: Propensity score pair match
+s5 <- system.time({
+  psmod <- glm(full_form, data = eclscomplete, family = binomial)
+  ps <- predict(psmod, type = "response")
+  psm1 <- pairmatch(catholic ~ ps, data = eclscomplete)
+})
+save[5,] <- c("PS Pair",
+              s5[1],
+              effectiveSampleSize(psm1))
+
+# Model 6: PS Full match
+s6 <- system.time({
+  psmod <- glm(full_form, data = eclscomplete, family = binomial)
+  ps <- predict(psmod, type = "response")
+  psm2 <- fullmatch(catholic ~ ps, data = eclscomplete)
+})
+save[6,] <- c("PS Full",
+              s6[1],
+              effectiveSampleSize(psm2))
+
+# Model 7: PS Full + Exact
+s7 <- system.time({
+  em <- exactMatch(catholic ~ race, data = eclscomplete)
+  psmod <- glm(full_form, data = eclscomplete, family = binomial)
+  ps <- predict(psmod, type = "response")
+  psm3 <- fullmatch(catholic ~ ps, data = eclscomplete, within = em)
+})
+save[7,] <- c("PSM + Exact",
+              s7[1],
+              effectiveSampleSize(psm3))
+```
+
+```{r, echo = FALSE}
+save <- as.data.frame(save, stringsAsFactors = FALSE)
+save$Time <- as.numeric(save$Time)
+save$ESS <- as.numeric(save$ESS)
+panderOptions('round', 2)
+pander(save)
+```
+
+----
+
+```{r, echo = FALSE}
+plot(xBalance(full_form, strata = list(unstrat = NULL,
+                                                 pair = ~pm1,
+                                                 pair2 = ~pm2,
+                                                 full = ~fm1,
+                                                 full_em = ~fm2,
+                                                 psp = ~psm1,
+                                                 psf = ~psm2,
+                                                 psf_em = ~psm3),
+              data = eclscomplete),
+     colors = 1:8,
+     absolute = TRUE,)
+```
+
+----
+
+```{r, echo = FALSE}
+resp_form <- c5r2mtsc ~ catholic + race_white + race_black + race_hispanic + race_asian +
+  p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr + I(w3income/10^3) +
+  w3povrty + p5fstamp
+save <- rbind(c(0, NA, NA), save)
+save[1,1] <- "Unmatched"
+save$Coef <- c(coef(lm(resp_form, data = eclscomplete))[2],
+  fixef(lmer(update(resp_form, . ~ . + (1 | pm1)), data = eclscomplete))[2],
+  fixef(lmer(update(resp_form, . ~ . + (1 | pm2)), data = eclscomplete))[2],
+  fixef(lmer(update(resp_form, . ~ . + (1 | fm1)), data = eclscomplete))[2],
+  fixef(lmer(update(resp_form, . ~ . + (1 | fm2)), data = eclscomplete))[2],
+  fixef(lmer(update(resp_form, . ~ . + (1 | psm1)), data = eclscomplete))[2],
+  fixef(lmer(update(resp_form, . ~ . + (1 | psm2)), data = eclscomplete))[2],
+  fixef(lmer(update(resp_form, . ~ . + (1 | psm3)), data = eclscomplete))[2])
+pander(save)
+```
+
+# Bibliography
