@@ -435,13 +435,13 @@ summary(fullmatch(mm, data = d))
 
 - 3-way trade-off between balance, speed and sample size (power)
 - In general:
-    - More restrictions leads to faster but less balanced matches.
+    - More constraints on `j`:`k` leads to more power but is slower.
+        - Too few constraints can limit usefulness.
+    - More exact matching or calipering leads to faster but less balanced matches.
         - Too many restrictions can reduce power.
-    - Less restrictions leads to slower but more balanced matches.
         - Too few restrictions can limit usefulness.
     - Dropping observations leads to more balance matches with lower power.
-    - Including all observations leads to less balanced matches but with higher power.
-    
+
 # Example
 
 ## ECLS data
@@ -464,7 +464,7 @@ eclscomplete <- ecls[complete.cases(ecls),]
 
 full_form <- catholic ~ race_white + race_black + race_hispanic + race_asian + p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr + w3income + w3povrty + p5fstamp
 
-save <- matrix(nrow = 7, ncol = 3)
+save <- matrix(nrow = 8, ncol = 3)
 colnames(save) <- c("Model",
                     "Time",
                     "ESS")
@@ -487,45 +487,52 @@ save[3,] <- c("Full match (unres.)",
               s3[1],
               effectiveSampleSize(fm1))
 
-# Model 4: Fullmatch with ExactMatch
-s4 <- system.time({
-  em <- exactMatch(catholic ~ race, data = eclscomplete)
-  dist <- match_on(full_form, within = em, data = eclscomplete)
-  fm2 <- fullmatch(dist, data = eclscomplete)
-})
-save[4,] <- c("Full + Exact",
+# Model 4: Restricted fullmatch
+s4 <- system.time(fm2 <- fullmatch(full_form, data = eclscomplete,
+                                   min = 1/10, max = 10))
+save[4,] <- c("Full match (restr.)",
               s4[1],
               effectiveSampleSize(fm2))
 
-# Model 5: Propensity score pair match
+# Model 5: Fullmatch with ExactMatch
 s5 <- system.time({
+  em <- exactMatch(catholic ~ race, data = eclscomplete)
+  dist <- match_on(full_form, within = em, data = eclscomplete)
+  fm3 <- fullmatch(dist, data = eclscomplete)
+})
+save[5,] <- c("Full + Exact",
+              s5[1],
+              effectiveSampleSize(fm3))
+
+# Model 6: Propensity score pair match
+s6 <- system.time({
   psmod <- glm(full_form, data = eclscomplete, family = binomial)
   ps <- predict(psmod, type = "response")
   psm1 <- pairmatch(catholic ~ ps, data = eclscomplete)
 })
-save[5,] <- c("PS Pair",
-              s5[1],
+save[6,] <- c("PS Pair",
+              s6[1],
               effectiveSampleSize(psm1))
 
-# Model 6: PS Full match
-s6 <- system.time({
+# Model 7: PS Full match
+s7 <- system.time({
   psmod <- glm(full_form, data = eclscomplete, family = binomial)
   ps <- predict(psmod, type = "response")
   psm2 <- fullmatch(catholic ~ ps, data = eclscomplete)
 })
-save[6,] <- c("PS Full",
-              s6[1],
+save[7,] <- c("PS Full",
+              s7[1],
               effectiveSampleSize(psm2))
 
-# Model 7: PS Full + Exact
-s7 <- system.time({
+# Model 8: PS Full + Exact
+s8 <- system.time({
   em <- exactMatch(catholic ~ race, data = eclscomplete)
   psmod <- glm(full_form, data = eclscomplete, family = binomial)
   ps <- predict(psmod, type = "response")
   psm3 <- fullmatch(catholic ~ ps, data = eclscomplete, within = em)
 })
-save[7,] <- c("PSM + Exact",
-              s7[1],
+save[8,] <- c("PSM + Exact",
+              s8[1],
               effectiveSampleSize(psm3))
 ```
 
@@ -544,13 +551,14 @@ plot(xBalance(full_form, strata = list(unstrat = NULL,
                                                  pair = ~pm1,
                                                  pair2 = ~pm2,
                                                  full = ~fm1,
-                                                 full_em = ~fm2,
+                                                 full_res = ~fm2,
+                                                 full_em = ~fm3,
                                                  psp = ~psm1,
                                                  psf = ~psm2,
                                                  psf_em = ~psm3),
               data = eclscomplete),
-     colors = 1:8,
-     absolute = TRUE,)
+     colors = 1:9,
+     absolute = TRUE)
 ```
 
 ----
@@ -559,13 +567,14 @@ plot(xBalance(full_form, strata = list(unstrat = NULL,
 resp_form <- c5r2mtsc ~ catholic + race_white + race_black + race_hispanic + race_asian +
   p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr + I(w3income/10^3) +
   w3povrty + p5fstamp
-save <- rbind(c(0, NA, NA), save)
+save <- rbind(c(0, NA, NA, NA), save)
 save[1,1] <- "Unmatched"
 save$Coef <- c(coef(lm(resp_form, data = eclscomplete))[2],
   fixef(lmer(update(resp_form, . ~ . + (1 | pm1)), data = eclscomplete))[2],
   fixef(lmer(update(resp_form, . ~ . + (1 | pm2)), data = eclscomplete))[2],
   fixef(lmer(update(resp_form, . ~ . + (1 | fm1)), data = eclscomplete))[2],
   fixef(lmer(update(resp_form, . ~ . + (1 | fm2)), data = eclscomplete))[2],
+  fixef(lmer(update(resp_form, . ~ . + (1 | fm3)), data = eclscomplete))[2],
   fixef(lmer(update(resp_form, . ~ . + (1 | psm1)), data = eclscomplete))[2],
   fixef(lmer(update(resp_form, . ~ . + (1 | psm2)), data = eclscomplete))[2],
   fixef(lmer(update(resp_form, . ~ . + (1 | psm3)), data = eclscomplete))[2])
