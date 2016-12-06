@@ -2,9 +2,15 @@
 title: "Matching with R: Strategies for larger data"
 author: Josh Errickson
 date: December 7, 2016
-output: 
-  ioslides_presentation:
-    transition: 0.1
+output:
+  revealjs::revealjs_presentation:
+    theme: solarized
+    highlight: haddock
+    transition: none
+    slide_level: 2
+    reveal_options:
+      slideNumber: true
+      fig_caption: false
 bibliography: bib.bib
 ---
 
@@ -41,7 +47,7 @@ http://cscar.research.umich.edu
 - Is distribution of covariates is the same in both groups?
     - Observed vs unobserved.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, out.height = 500}
 x1 <- rbeta(100, 10, 1)
 x2 <- rbeta(100, 1, 2)
 d <- data.frame(x = c(x1, x2), group = factor(rep(letters[1:2], each = 100)))
