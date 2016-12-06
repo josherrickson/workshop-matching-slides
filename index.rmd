@@ -44,7 +44,7 @@ http://cscar.research.umich.edu
 
 ## Balance
 
-- Is distribution of covariates is the same in both groups?
+- Is distribution of covariates the same in both groups?
     - Observed vs unobserved.
 
 ```{r, echo = FALSE, out.height = 500}
@@ -72,8 +72,10 @@ plot(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearpla
 ## Measuring match quality
 
 - Formal goal: Balance
-- Intermediate goal: Total distance
-- Strong correlation
+    - Harder to define
+    - Is often multi-dimensional
+- Intermediate goal: Total distance within match
+- Strong correlation between balance and distance
 - Can use total distance to find a good match, and check it with balance.
 
 ## Propensity Score Matching
@@ -197,20 +199,20 @@ plot(xbal2, color = 1:2)
 - Pair matched data is 1:1 - a single treatment to a single control.
 - 1:2 would mean each treatment member shares two controls.
 - 3:1 means three treatment members share a single control.
-- 1:`k` or `k`:1 always better than `j`:`k`
+- The optimal match will have all matched sets of size `j`:`k` where either `j` = 1 or `k` = 1.
 
-## 1:`k` and `k`:1 matching
+## 1:`k` or `j`:1 matching
 
 - Optimal pair matching useful if sample sizes are close - easy to interpret.
 - Not good if one group is much larger.
     - Loses data
-- 1:`k` or `k`:1 matching allows less data loss.
+- 1:`k` or `j`:1 matching allows less data loss.
 
-## 1:`k` or `k`:1 matching in `optmatch`
+## 1:`k` or `j`:1 matching in `optmatch`
 
 - `controls` argument to `pairmatch`
     - 2, 3, 4, etc for 1:`k`
-    - 1/2, 1/3, 1/4, etc for `k`:1.
+    - 1/2, 1/3, 1/4, etc for `j`:1.
 
 ```{r}
 d$match2 <- pairmatch(group ~ x1 + x2, controls = 2, data = d)
@@ -242,11 +244,11 @@ plot(xbal3, color = 1:3)
 ```{r, eval = FALSE}
 pairmatch(group ~ x1 + x2, data = d, controls = 3)
 ```
-Produces:
+
 ```
-Error in pairmatch.matrix(m, controls = controls, data = mfd, 
-  remove.unmatchables = remove.unmatchables, : not enough 
-  controls in some subclasses
+## Error in pairmatch.matrix(m, controls = controls, data = mfd, 
+##   remove.unmatchables = remove.unmatchables, : not enough 
+##   controls in some subclasses
 ```
 
 
@@ -255,7 +257,7 @@ Error in pairmatch.matrix(m, controls = controls, data = mfd,
 
 - Even with 1:`k`, can still lose up to \((n_c - k*n_t)\) data .
    - E.g., 10 treatment, 67 controls, 1:6 matching loses 7 controls.
-- 1:`k` may not always be best - sometimes 1:`j`?
+- Sometimes flexibility might help.
 
 Treatment | Control
 :--------:|:------:
@@ -266,7 +268,7 @@ Treatment | Control
 
 ## Fullmatching
 
-- Allow 1:`k` or `k`:1 where `k` can vary per set.
+- Allow 1:`k` or `j`:1 where `k` or `j` can vary per matched set.
 
 ```{r}
 d$fullmatch1 <- fullmatch(group ~ x1 + x2, data = d)
@@ -293,8 +295,8 @@ summary(d$fullmatch2)
 ```{r}
 xbal4 <- xBalance(group ~ x1 + x2, 
                   strata = list(unmatched = NULL,
-#                               match1 = ~ match,
-#                               match2 = ~ match2,
+                                match1 = ~ match,
+                                match2 = ~ match2,
                                 full1 = ~ fullmatch1,
                                 full2 = ~ fullmatch2),
                   data = d, report = "chisq")
@@ -312,7 +314,7 @@ plot(xbal4, color = 1:5)
 
 # Speeding up matching
 
-## Structure
+## Distance Matrix
 
 ```{r, echo = FALSE}
 dist <- matrix(c(1,4,0, Inf, 2, 5), nrow = 2)
@@ -362,7 +364,7 @@ as.matrix(em)
 
 ----
 
-- ... because each subproblem can be considered its own matching problem.
+- ... because each sub-problem can be considered its own matching problem.
 
 ```{r}
 em
@@ -376,18 +378,26 @@ em
 m1 + em
 ```
 
-- This works for two of any format (exact or regular).
+- This works for distance matricies of any format (from `match_on`, `exactMatch` or `caliper` [which we'll see in a few slides]).
 
 ----
 
 - Can be done in a single step as well:
 
 ```{r}
-m2 <- match_on(group ~ x1 + x2, data = d,
-               within = em)
+m2 <- match_on(group ~ x1 + x2, data = d, within = em)
 m2
 ```
 
+----
+
+- Now, perform matching directly on this distance.
+
+```{r}
+emmatch <- fullmatch(m2, data = d)
+summary(emmatch)
+emmatch
+```
 
 ## Calipering
 
