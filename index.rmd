@@ -74,9 +74,8 @@ plot(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearpla
 - Formal goal: Balance
     - Harder to define
     - Is often multi-dimensional
-- Intermediate goal: Total distance within match
+- Instead, measure total distance within match
 - Strong correlation between balance and distance
-- Can use total distance to find a good match, and check it with balance.
 
 ## Propensity Score Matching
 
@@ -211,7 +210,7 @@ plot(xbal2, color = 1:2)
 ## 1:`k` or `j`:1 matching in `optmatch`
 
 - `controls` argument to `pairmatch`
-    - 2, 3, 4, etc for 1:`k`
+    - 2, 3, 4, etc for 1:`k`.
     - 1/2, 1/3, 1/4, etc for `j`:1.
 
 ```{r}
@@ -253,10 +252,10 @@ pairmatch(group ~ x1 + x2, data = d, controls = 3)
 
 
 
-## Issues with 1:`k` or `k`:1 matching
+## Issues with 1:`k` or `j`:1 matching
 
 - Even with 1:`k`, can still lose up to \((n_c - k*n_t)\) data .
-   - E.g., 10 treatment, 67 controls, 1:6 matching loses 7 controls.
+    - E.g., 10 treatment, 67 controls, 1:6 matching loses 7 controls.
 - Sometimes flexibility might help.
 
 Treatment | Control
@@ -277,10 +276,11 @@ summary(d$fullmatch)
 
 - Guaranteed to find the best possible match.
 - Best may not be useful: 99:1 and 1:99.
+    - Also lowers power (ESS)
 
 ----
 
-- Instead we set bounds, e.g. all sets between 2:1 and 1:3.
+- Instead we set constraints, e.g. all sets between 2:1 and 1:3.
 
 ```{r}
 d$fullmatch2 <- fullmatch(group ~ x1 + x2, 
@@ -332,10 +332,15 @@ dist
 
 - Built in `optmatch`, similar notation
 
-```{r}
+```{r, results = "hide"}
 m1 <- match_on(group ~ x1 + x2, data = d)
 m1
 ```
+
+```{r, echo = FALSE}
+as.matrix(m1)
+```
+
 ## Exact Matching
 
 ```{r, echo = FALSE}
@@ -433,7 +438,7 @@ summary(fullmatch(mm, data = d))
 
 ## Discussion
 
-- 3-way trade-off between balance, speed and sample size (power)
+- 3-way trade-off between balance, speed and effective sample size (power).
 - In general:
     - More constraints on `j`:`k` leads to more power but is slower.
         - Too few constraints can limit usefulness.
