@@ -47,7 +47,7 @@ http://cscar.research.umich.edu
 - Is distribution of covariates the same in both groups?
     - Observed vs unobserved.
 
-```{r, echo = FALSE, out.height = 500}
+```{r, echo = FALSE, out.height = 400, out.width=500}
 x1 <- rbeta(100, 10, 1)
 x2 <- rbeta(100, 1, 2)
 d <- data.frame(x = c(x1, x2), group = factor(rep(letters[1:2], each = 100)))
@@ -56,10 +56,10 @@ ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
 
 ## Love plot
 
-```{r, echo = FALSE, message = FALSE}
+```{r, echo = FALSE, message = FALSE, fig.height=5, fig.width=6, out.height = 600, out.width = 720}
 library(RItools)
 data(nuclearplants)
-plot(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearplants))
+plotggxbal(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearplants))
 ```
 
 ## Distance
@@ -80,7 +80,7 @@ plot(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearpla
 ## Propensity Score Matching
 
 - Matching on more than one covariate is challenging.
-- \(e(\mathbf{X}) = P(Z = 1 | \mathbf{X})\)
+- $e(\mathbf{X}) = P(Z = 1 | \mathbf{X})$
 - PS can be thought of as dimension reduction.
 - PS estimated by logistic regression predicting group membership.
     - "Kitchen sink"
@@ -157,8 +157,11 @@ xbal
 
 ----
 
-```{r}
+```{r, eval=FALSE}
 plot(xbal)
+```
+```{r, echo = FALSE, message=FALSE}
+plotggxbal(xbal)
 ```
 
 ---- 
