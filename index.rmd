@@ -89,6 +89,15 @@ $e(\mathbf{X}) = P(Z = 1 | \mathbf{X})$
 - PS can be thought of as dimension reduction.
 - PS estimated by logistic regression predicting group membership.
     - "Kitchen sink"
+    
+## Main Benefit of PS matching
+
+- If we can ...
+    1. Observe the true propensity score.
+    2. Have an infinitely large sample size.
+    3. Can pair observations that have identical PS's.
+- ... then we get covariate balance on observed *and unobserved* covariates!
+- Of course, not perfect, but better than nothing.
 
 # Separating Matching and Propensity Scores
 
@@ -304,7 +313,7 @@ Treatment | Control
 
 ```{r}
 d$fullmatch1 <- fullmatch(group ~ x1 + x2, data = d)
-summary(d$fullmatch)
+summary(d$fullmatch1)
 ```
 
 - Guaranteed to find the best possible match.
