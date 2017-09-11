@@ -62,7 +62,7 @@ data(nuclearplants)
 plotggxbal(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearplants),
            point.size = 5, theme.size = 16,
            strata.labels = c("unstrat" = "Unmatched"))
-  
+
 ```
 
 ## Distance
@@ -89,7 +89,7 @@ $e(\mathbf{X}) = P(Z = 1 | \mathbf{X})$
 - PS can be thought of as dimension reduction.
 - PS estimated by logistic regression predicting group membership.
     - "Kitchen sink"
-    
+
 ## Main Benefit of PS matching
 
 - If we can ...
@@ -165,7 +165,7 @@ lm(y ~ x1 + x2 + match, data = d)
 ```{r, message = FALSE}
 #install.packages("RItools")
 library(RItools)
-xbal <- xBalance(group ~ x1 + x2, data = d, 
+xbal <- xBalance(group ~ x1 + x2, data = d,
                  report = "all")
 xbal
 ```
@@ -180,12 +180,12 @@ plotggxbal(xbal, point.size = 5, theme.size = 16,
            strata.labels = c("unstrat" = "Unmatched"))
 ```
 
----- 
+----
 
 - Now compare the unmatched data to the matched data.
 
 ```{r}
-xbal2 <- xBalance(group ~ x1 + x2, 
+xbal2 <- xBalance(group ~ x1 + x2,
                   strata = list(unmatched = NULL,
                                 match = ~ match),
                   data = d, report = "chisq")
@@ -195,7 +195,7 @@ xbal2
 ----
 
 ```{r, eval = FALSE}
-xbal2 <- xBalance(group ~ x1 + x2, 
+xbal2 <- xBalance(group ~ x1 + x2,
                   strata = list(unmatched = NULL,
                                 match = ~ match),
                   data = d, report = "all")
@@ -205,10 +205,10 @@ plot(xbal2)
 xbal2 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
                                                  match = ~ match),
                   data = d, report = "all")
-plotggxbal(xbal2, point.size = 5, theme.size = 16, 
+plotggxbal(xbal2, point.size = 5, theme.size = 16,
            strata.labels = c("unmatched" = "Unmatched",
                              "match" = "Match"))
-``` 
+```
 
 # Optimal and Full matching
 
@@ -242,7 +242,7 @@ plotggxbal(xbal2, point.size = 5, theme.size = 16,
     - 1/2, 1/3, 1/4, etc for `j`:1.
 
 ```{r}
-d$match2 <- pairmatch(group ~ x1 + x2, 
+d$match2 <- pairmatch(group ~ x1 + x2,
                       controls = 2, data = d)
 summary(d$match2)
 ```
@@ -250,7 +250,7 @@ summary(d$match2)
 ----
 
 ```{r}
-xbal3 <- xBalance(group ~ x1 + x2, 
+xbal3 <- xBalance(group ~ x1 + x2,
                   strata = list(unmatched = NULL,
                                 match1 = ~ match,
                                 match2 = ~ match2),
@@ -269,7 +269,7 @@ xbal3 <- xBalance(group ~ x1 + x2,
 plot(xbal3)
 ```
 ```{r, echo = FALSE, message = FALSE, fig.height = 4.75, fig.width = 6}
-xbal3 <- xBalance(group ~ x1 + x2, 
+xbal3 <- xBalance(group ~ x1 + x2,
                   strata = list(unmatched = NULL,
                                 match1 = ~ match,
                                 match2 = ~ match2),
@@ -287,8 +287,8 @@ pairmatch(group ~ x1 + x2, data = d, controls = 3)
 ```
 
 ```
-## Error in pairmatch.matrix(m, controls = controls, data = mfd, 
-##   remove.unmatchables = remove.unmatchables, : not enough 
+## Error in pairmatch.matrix(m, controls = controls, data = mfd,
+##   remove.unmatchables = remove.unmatchables, : not enough
 ##   controls in some subclasses
 ```
 
@@ -325,8 +325,8 @@ summary(d$fullmatch1)
 - Instead we set constraints, e.g. all sets between 2:1 and 1:3.
 
 ```{r}
-d$fullmatch2 <- fullmatch(group ~ x1 + x2, 
-                          max.controls = 3, 
+d$fullmatch2 <- fullmatch(group ~ x1 + x2,
+                          max.controls = 3,
                           min.controls = 1/2,
                           data = d)
 summary(d$fullmatch2)
@@ -335,7 +335,7 @@ summary(d$fullmatch2)
 ----
 
 ```{r}
-xbal4 <- xBalance(group ~ x1 + x2, 
+xbal4 <- xBalance(group ~ x1 + x2,
                   strata = list(unmatched = NULL,
                                 match1 = ~ match,
                                 match2 = ~ match2,
@@ -463,7 +463,7 @@ emmatch
     - Ensure they never match.
         - (Overall match may suffer, but no individual match is terrible.)
     - Speed up calculations by not checking them.
-  
+
 ----
 
 ```{r}
@@ -475,7 +475,8 @@ m1 + c1
 ## Combining it all
 
 ```{r}
-mm <- match_on(group ~ x1 + x2, data = d, within = em, caliper = 4)
+mm <- match_on(group ~ x1 + x2, data = d,
+               within = em, caliper = 4)
 mm
 ```
 
@@ -625,7 +626,7 @@ plotggxbal(xBalance(full_form, strata = list(unmatched = NULL,
      absolute = TRUE,
      point.size = 5,
      theme.size = 15,
-     strata.labels = c("unmatched" = "Unmatched", "full" = "Fullmatch", 
+     strata.labels = c("unmatched" = "Unmatched", "full" = "Fullmatch",
                        "full_res" = "Fullmatch with restrictions",
                        "full_em" = "Fullmatch with exactmatch"))
 ```
@@ -641,7 +642,7 @@ plotggxbal(xBalance(full_form, strata = list(unmatched = NULL,
      absolute = TRUE,
      point.size = 5,
      theme.size = 15,
-     strata.labels = c("unmatched" = "Unmatched", "psp" = "PS Pair", 
+     strata.labels = c("unmatched" = "Unmatched", "psp" = "PS Pair",
                        "psf" = "PS Full w/ restrictions",
                        "psf_em" = "PS Full w/ exactmatch"))
 ```
