@@ -371,10 +371,9 @@ plotggxbal(xbal4, point.size = 5, theme.size = 16,
 dist <- matrix(c(1,4,0, Inf, 2, 5), nrow = 2)
 rownames(dist) <- c("t1", "t2")
 colnames(dist) <- c("c1", "c2", "c3")
-```
-```{r}
 dist
 ```
+
 - Each entry represents a distance.
 - `0` represents identical, `Inf` represents never match.
 - The more `Inf`, the faster matching will run.
@@ -396,7 +395,7 @@ as.matrix(m1)
 
 ```{r, echo = FALSE}
 d <- d[,1:3]
-d$gender <- c(0,1,1,0,0,1,0,1,1,0,1)
+d$category <- c(0,1,1,0,0,1,0,1,1,0,1)
 op <- options()
 options(str = strOptions(vec.len = 6))
 ```
@@ -412,7 +411,7 @@ options(op)
 ----
 
 ```{r}
-em <- exactMatch(group ~ gender, data = d)
+em <- exactMatch(group ~ category, data = d)
 as.matrix(em)
 ```
 
@@ -467,10 +466,19 @@ emmatch
 ----
 
 ```{r}
+as.matrix(m1)
 c1 <- caliper(m1, width = 4)
 c1
 m1 + c1
 ```
+
+## Calipering one dimension
+
+- Sometimes you might want to caliper only one dimension rather than overall distance - e.g. only `x1`, not the combination of `x1` and `x2`.
+- Two steps process. 
+    1. Generate a distance matrix for `x1` and caliper it (creating a matrix of 0's and Inf's.
+    2. Generate the distance matrix for `x1` and `x2` and add it to the caliper'd matrix from step 1.
+- Slightly different result than calipering overall distance.
 
 ## Combining it all
 
