@@ -1,0 +1,5 @@
+Future additions
+--------------------
+- Overlap in propensity scores
+- logit vs untransformed PS
+- Nobipartite (quickmatch)
