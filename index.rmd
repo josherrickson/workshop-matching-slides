@@ -1,7 +1,7 @@
 ---
 title: "Matching with R: Strategies for larger data"
 author: Josh Errickson
-date: Sept 11, 2017
+date: Nov 16, 2018
 output:
   revealjs::revealjs_presentation:
     theme: solarized
@@ -57,7 +57,7 @@ ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
 ## Love plot
 
 ```{r, echo = FALSE, message = FALSE}
-library(RItools)
+devtools::load_all("~/repositories/r/ritools/")
 data(nuclearplants)
 plotggxbal(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearplants),
            point.size = 5, theme.size = 16,
@@ -111,7 +111,9 @@ $e(\mathbf{X}) = P(Z = 1 | \mathbf{X})$
 - Weighting
 - Subsetting
 - Stratafication
+- Treating PS as a predictor in Regression
 - ...
+- Each has it's own pro's and con's.
 
 # Introduction to `optmatch` and `RItools`
 
@@ -159,6 +161,7 @@ lm(y ~ x1 + x2 + match, data = d)
 - A collection of useful function for randomization inference
 - Most useful for `xBalance` function
     - Checks balance and `plot`ing the result of `xBalance` will produce a Love plot.
+    - (`xBalance` function being replaced with `balanceTest` function in development version, functionality remains almost identical, should be released in next few months.)
 
 ----
 
@@ -244,6 +247,12 @@ plotggxbal(xbal2, point.size = 5, theme.size = 16,
 ```{r}
 d$match2 <- pairmatch(group ~ x1 + x2,
                       controls = 2, data = d)
+d$match2
+```
+
+----
+
+```{r}
 summary(d$match2)
 ```
 
@@ -475,7 +484,7 @@ m1 + c1
 ## Calipering one dimension
 
 - Sometimes you might want to caliper only one dimension rather than overall distance - e.g. only `x1`, not the combination of `x1` and `x2`.
-- Two steps process. 
+- Two steps process.
     1. Generate a distance matrix for `x1` and caliper it (creating a matrix of 0's and Inf's.
     2. Generate the distance matrix for `x1` and `x2` and add it to the caliper'd matrix from step 1.
 - Slightly different result than calipering overall distance.
@@ -503,6 +512,7 @@ summary(fullmatch(mm, data = d))
 - 3-way trade-off between balance, speed and effective sample size (power).
     - More constraints on `j`:`k` leads to more power but is slower.
         - Too few constraints can limit usefulness.
+        - May throw away a lot of data, negating power gain.
     - More exact matching or calipering leads to faster but less balanced matches.
         - Too many restrictions can reduce power.
         - Too few restrictions can limit usefulness.
