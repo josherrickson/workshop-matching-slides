@@ -17,8 +17,11 @@ bibliography: bib.bib
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 options(digits = 4)
 library(lme4)
+library(lmerTest)
 library(pander)
 library(ggplot2)
+library(optmatch)
+library(RItools)
 ```
 
 
@@ -40,7 +43,12 @@ http://cscar.research.umich.edu
 
 ## Goals of Matching
 
-"One of the key benefits of randomized experiments for estimating causal effects is that the treated and control groups are guaranteed to be only randomly different from one another on all background covariates, both observed and unobserved. Work on matching methods has examined how to replicate this as much as possible for observed covariates with observational (non-randomized) data."[@stuart2010matching]
+"One of the key benefits of randomized experiments for estimating causal effects
+is that the treated and control groups are guaranteed to be only randomly
+different from one another on all background covariates, both observed and
+unobserved. Work on matching methods has examined how to replicate this as much
+as possible for observed covariates with observational (non-randomized)
+data."[@stuart2010matching]
 
 ## Balance
 
@@ -57,12 +65,10 @@ ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
 ## Love plot
 
 ```{r, echo = FALSE, message = FALSE}
-devtools::load_all("~/repositories/r/ritools/")
 data(nuclearplants)
-plotggxbal(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearplants),
-           point.size = 5, theme.size = 16,
-           strata.labels = c("unstrat" = "Unmatched"))
-
+plot(balanceTest(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearplants)) +
+  theme(legend.position = "off", text = element_text(size=20)) +
+  geom_point(size=5)
 ```
 
 ## Distance
@@ -84,7 +90,7 @@ plotggxbal(xBalance(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nucl
 
 - Matching on more than one covariate is challenging.
 
-$e(\mathbf{X}) = P(Z = 1 | \mathbf{X})$
+$ps(\mathbf{X}) = P(Z = 1 | \mathbf{X})$
 
 - PS can be thought of as dimension reduction.
 - PS estimated by logistic regression predicting group membership.
@@ -159,28 +165,28 @@ lm(y ~ x1 + x2 + match, data = d)
 ## `RItools`
 
 - A collection of useful function for randomization inference
-- Most useful for `xBalance` function
-    - Checks balance and `plot`ing the result of `xBalance` will produce a Love plot.
-    - (`xBalance` function being replaced with `balanceTest` function in development version, functionality remains almost identical, should be released in next few months.)
+- Most useful for `balanceTest` function
+    - Checks balance and `plot`ing the result of `balanceTest` will produce a Love plot.
+    - (`balanceTest` function being replaced with `balanceTest` function in development version, functionality remains almost identical, should be released in next few months.)
 
 ----
 
 ```{r, message = FALSE}
 #install.packages("RItools")
 library(RItools)
-xbal <- xBalance(group ~ x1 + x2, data = d,
-                 report = "all")
-xbal
+baltest <- balanceTest(group ~ x1 + x2, data = d)
+baltest
 ```
 
 ----
 
 ```{r, eval=FALSE}
-plot(xbal)
+plot(baltest)
 ```
-```{r, echo = FALSE, message = FALSE}
-plotggxbal(xbal, point.size = 5, theme.size = 16,
-           strata.labels = c("unstrat" = "Unmatched"))
+```{r, echo = FALSE, message = FALSE, out.height = 500, out.width = 600}
+plot(baltest) +
+  theme(text = element_text(size=20), legend.position = "off") +
+  geom_point(size = 5)
 ```
 
 ----
@@ -188,29 +194,18 @@ plotggxbal(xbal, point.size = 5, theme.size = 16,
 - Now compare the unmatched data to the matched data.
 
 ```{r}
-xbal2 <- xBalance(group ~ x1 + x2,
-                  strata = list(unmatched = NULL,
-                                match = ~ match),
-                  data = d, report = "chisq")
-xbal2
+baltest2 <- balanceTest(group ~ x1 + x2 + strata(match), data = d)
+baltest2
 ```
 
 ----
 
 ```{r, eval = FALSE}
-xbal2 <- xBalance(group ~ x1 + x2,
-                  strata = list(unmatched = NULL,
-                                match = ~ match),
-                  data = d, report = "all")
-plot(xbal2)
+plot(baltest2)
 ```
-```{r, echo = FALSE, message = FALSE, fig.height = 5, fig.width = 6}
-xbal2 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
-                                                 match = ~ match),
-                  data = d, report = "all")
-plotggxbal(xbal2, point.size = 5, theme.size = 16,
-           strata.labels = c("unmatched" = "Unmatched",
-                             "match" = "Match"))
+```{r, echo = FALSE, message = FALSE, out.height = 500, out.width = 600}
+plot(baltest2) + geom_point(size = 5) +
+  theme(legend.position = "bottom", text = element_text(size=20))
 ```
 
 # Optimal and Full matching
@@ -259,46 +254,25 @@ summary(d$match2)
 ----
 
 ```{r}
-xbal3 <- xBalance(group ~ x1 + x2,
-                  strata = list(unmatched = NULL,
-                                match1 = ~ match,
-                                match2 = ~ match2),
-                  data = d, report = "chisq")
-xbal3
+baltest3 <- balanceTest(group ~ x1 + x2 + strata(match) + strata(match2),
+                     data = d)
+baltest3
 ```
 
 ----
 
 ```{r, eval = FALSE}
-xbal3 <- xBalance(group ~ x1 + x2,
-                  strata = list(unmatched = NULL,
-                                match1 = ~ match,
-                                match2 = ~ match2),
-                  data = d, report = "all")
-plot(xbal3)
+plot(baltest3)
 ```
-```{r, echo = FALSE, message = FALSE, fig.height = 4.75, fig.width = 6}
-xbal3 <- xBalance(group ~ x1 + x2,
-                  strata = list(unmatched = NULL,
-                                match1 = ~ match,
-                                match2 = ~ match2),
-                  data = d, report = "all")
-plotggxbal(xbal3, point.size = 5, theme.size = 16,
-           strata.labels = c("unmatched" = "Unmatched",
-                             "match1" = "Pairmatch",
-                             "match2" = "2:1 Pairmatch"))
+```{r, echo = FALSE, message = FALSE, out.height = 500, out.width = 600}
+plot(baltest3) + geom_point(size = 5) +
+  theme(legend.position = "bottom", text = element_text(size=20))
 ```
 
 ----
 
-```{r, eval = FALSE}
+```{r, error = TRUE}
 pairmatch(group ~ x1 + x2, data = d, controls = 3)
-```
-
-```
-## Error in pairmatch.matrix(m, controls = controls, data = mfd,
-##   remove.unmatchables = remove.unmatchables, : not enough
-##   controls in some subclasses
 ```
 
 
@@ -344,32 +318,20 @@ summary(d$fullmatch2)
 ----
 
 ```{r}
-xbal4 <- xBalance(group ~ x1 + x2,
-                  strata = list(unmatched = NULL,
-                                match1 = ~ match,
-                                match2 = ~ match2,
-                                full1 = ~ fullmatch1,
-                                full2 = ~ fullmatch2),
-                  data = d, report = "chisq")
-xbal4
+baltest4 <- balanceTest(group ~ x1 + x2 + strata(match) +
+                       strata(match2) + strata(fullmatch1) +
+                    strata(fullmatch2), data = d)
+baltest4
 ```
 
 ----
 
 ```{r, eval = FALSE}
-xbal4 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
-                   full1 = ~ fullmatch1, full2 = ~fullmatch2),
-                  data = d, report = "all")
-plot(xbal4)
+plot(baltest4)
 ```
-```{r, echo = FALSE, message = FALSE, fig.width = 6, fig.height = 5}
-xbal4 <- xBalance(group ~ x1 + x2, strata = list(unmatched = NULL,
-                   full1 = ~ fullmatch1, full2 = ~fullmatch2),
-                  data = d, report = "all")
-plotggxbal(xbal4, point.size = 5, theme.size = 16,
-           strata.labels = c("unmatched" = "Unmatched",
-                             "full1" = "Fullmatch",
-                             "full2" = "Fulllmatch w/ restrictions"))
+```{r, echo = FALSE, message = FALSE, out.height = 500, out.width = 600}
+plot(baltest4) + geom_point(size = 5) +
+  theme(legend.position = "bottom", text = element_text(size=20))
 ```
 
 # Speeding up matching
@@ -442,7 +404,8 @@ em
 m1 + em
 ```
 
-- This works for distance matricies of any format (from `match_on`, `exactMatch` or `caliper` [which we'll see in a few slides]).
+- This works for distance matricies of any format (from `match_on`, `exactMatch`
+  or `caliper` [which we'll see in a few slides]).
 
 ----
 
@@ -478,6 +441,11 @@ emmatch
 as.matrix(m1)
 c1 <- caliper(m1, width = 4)
 c1
+```
+
+----
+
+```{r}
 m1 + c1
 ```
 
@@ -623,65 +591,84 @@ pander(save)
 ----
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-plotggxbal(xBalance(full_form, strata = list(unmatched = NULL,
-                                                 pair = ~pm1,
-                                                 pair2 = ~pm2),
-              data = eclscomplete),
-     absolute = TRUE,
-     point.size = 5,
-     theme.size = 15,
-     strata.labels = c("unmatched" = "Unmatched", "pair" = "Pair", "pair2" = "2:1 Pair"))
+labels <- c("Unmatched", "Pair", "1:2 Pair")
+plot(balanceTest(update(full_form,
+                        . ~ . + strata(pm1) + strata(pm2)),
+                 data = eclscomplete), absolute = TRUE,
+     xlab = "Absolute Standardized Differences") +
+  geom_point(size = 5) +
+  scale_color_discrete(name = "", labels = labels) +
+  scale_shape_discrete(name = "", labels = labels) +
+  theme(legend.position = "bottom", text = element_text(size=20))
 ```
 
 ----
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-plotggxbal(xBalance(full_form, strata = list(unmatched = NULL,
-                                                 full = ~fm1,
-                                                 full_res = ~fm2,
-                                                 full_em = ~fm3),
-              data = eclscomplete),
-     absolute = TRUE,
-     point.size = 5,
-     theme.size = 15,
-     strata.labels = c("unmatched" = "Unmatched", "full" = "Fullmatch",
-                       "full_res" = "Fullmatch with restrictions",
-                       "full_em" = "Fullmatch with exactmatch"))
+labels <- c("Unmatched", "Fullmatch", "Fullmatch, Restrictions", "Fullmatch, Exactmatch")
+plot(balanceTest(update(full_form,
+                        . ~ . + strata(fm1) + strata(fm2) + strata(fm3)),
+                 data = eclscomplete), absolute = TRUE,
+     xlab = "Absolute Standardized Differences") +
+  geom_point(size = 5) +
+  scale_color_discrete(name = "", labels = labels) +
+  scale_shape_discrete(name = "", labels = labels) +
+  theme(legend.position = "bottom", text = element_text(size=20)) +
+  guides(color=guide_legend(nrow = 2,byrow = TRUE))
 ```
 
 ----
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-plotggxbal(xBalance(full_form, strata = list(unmatched = NULL,
-                                                 psp = ~psm1,
-                                                 psf = ~psm2,
-                                                 psf_em = ~psm3),
-              data = eclscomplete),
-     absolute = TRUE,
-     point.size = 5,
-     theme.size = 15,
-     strata.labels = c("unmatched" = "Unmatched", "psp" = "PS Pair",
-                       "psf" = "PS Full w/ restrictions",
-                       "psf_em" = "PS Full w/ exactmatch"))
+
+labels <- c("Unmatched", "PSM Pair", "PSM Full, Restrictions", "PSM Full, Exactmatch")
+plot(balanceTest(update(full_form,
+                        . ~ . + strata(psm1) + strata(psm2) + strata(psm3)),
+                 data = eclscomplete), absolute = TRUE,
+     xlab = "Absolute Standardized Differences") +
+  geom_point(size = 5) +
+  scale_color_discrete(name = "", labels = labels) +
+  scale_shape_discrete(name = "", labels = labels) +
+  theme(legend.position = "bottom", text = element_text(size=20)) +
+  guides(color=guide_legend(nrow = 2,byrow = TRUE))
+
 ```
 
 ----
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message = FALSE}
 resp_form <- c5r2mtsc ~ catholic + race_white + race_black + race_hispanic + race_asian +
   p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr + I(w3income/10^3) +
   w3povrty + p5fstamp
-save <- rbind(c(0, NA, NA, NA), save)
+save <- rbind(c(0, NA, NA), save)
 save[1,1] <- "Unmatched"
-save$Coef <- c(coef(lm(resp_form, data = eclscomplete))[2],
-  fixef(lmer(update(resp_form, . ~ . + (1 | pm1)), data = eclscomplete))[2],
-  fixef(lmer(update(resp_form, . ~ . + (1 | pm2)), data = eclscomplete))[2],
-  fixef(lmer(update(resp_form, . ~ . + (1 | fm1)), data = eclscomplete))[2],
-  fixef(lmer(update(resp_form, . ~ . + (1 | fm2)), data = eclscomplete))[2],
-  fixef(lmer(update(resp_form, . ~ . + (1 | fm3)), data = eclscomplete))[2],
-  fixef(lmer(update(resp_form, . ~ . + (1 | psm1)), data = eclscomplete))[2],
-  fixef(lmer(update(resp_form, . ~ . + (1 | psm2)), data = eclscomplete))[2],
-  fixef(lmer(update(resp_form, . ~ . + (1 | psm3)), data = eclscomplete))[2])
+
+
+
+results <- rbind(summary(lm(resp_form,
+                          data = eclscomplete))$coeff["catholic", c(1, 4)],
+               summary(lmer(update(resp_form, . ~ . + (1 | pm1)),
+                            data = eclscomplete))$coeff["catholic", c(1, 5)],
+               summary(lmer(update(resp_form, . ~ . + (1 | pm2)),
+                            data = eclscomplete))$coeff["catholic", c(1, 5)],
+               summary(lmer(update(resp_form, . ~ . + (1 | fm1)),
+                            data = eclscomplete))$coeff["catholic", c(1, 5)],
+               summary(lmer(update(resp_form, . ~ . + (1 | fm2)),
+                            data = eclscomplete))$coeff["catholic", c(1, 5)],
+               summary(lmer(update(resp_form, . ~ . + (1 | fm3)),
+                            data = eclscomplete))$coeff["catholic", c(1, 5)],
+               summary(lmer(update(resp_form, . ~ . + (1 | psm1)),
+                            data = eclscomplete))$coeff["catholic", c(1, 5)],
+               summary(lmer(update(resp_form, . ~ . + (1 | psm2)),
+                            data = eclscomplete))$coeff["catholic", c(1, 5)],
+               summary(lmer(update(resp_form, . ~ . + (1 | psm3)),
+                            data = eclscomplete))$coeff["catholic", c(1, 5)])
+colnames(results) <- c("Est. Coef", "p-val")
+
+save$"Est. coef" <- results[, 1]
+save$"p-value" <- ifelse(results[, "p-val"] < .001, "<.001", results[, "p-val"])
+
+
 pander(save)
 ```
 
