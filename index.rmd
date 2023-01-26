@@ -11,7 +11,6 @@ output:
     reveal_options:
       slideNumber: true
       fig_caption: false
-bibliography: bib.bib
 ---
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
@@ -24,13 +23,6 @@ library(optmatch)
 library(RItools)
 ```
 
-
-----
-
-![](cscar.png)
-
-http://cscar.research.umich.edu
-
 ## Outline
 1. Review of propensity scores and matching
 2. Separating PS and matching
@@ -41,26 +33,42 @@ http://cscar.research.umich.edu
 
 # Review of Matching
 
-## Goals of Matching
+## Overlap & Balance #1
 
-"One of the key benefits of randomized experiments for estimating causal effects
-is that the treated and control groups are guaranteed to be only randomly
-different from one another on all background covariates, both observed and
-unobserved. Work on matching methods has examined how to replicate this as much
-as possible for observed covariates with observational (non-randomized)
-data."[@stuart2010matching]
-
-## Balance
-
-- Is distribution of covariates the same in both groups?
-    - Observed vs unobserved.
+- Overlap: Are variables observed over the same range for both groups?
 
 ```{r, echo = FALSE, out.height = 400, out.width=500}
-x1 <- rbeta(100, 10, 1)
+set.seed(1)
+x1 <- rnorm(100)
+x2 <- rnorm(100, 3)
+d <- data.frame(x = c(x1, x2), group = factor(rep(letters[1:2], each = 100)))
+ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
+```
+
+## Overlap & Balance #2
+
+- Balance: Are the distributions of variables the same for both groups?
+
+```{r, echo = FALSE, out.height = 400, out.width=500}
+x1 <- rbeta(100, 2, 1)
 x2 <- rbeta(100, 1, 2)
 d <- data.frame(x = c(x1, x2), group = factor(rep(letters[1:2], each = 100)))
 ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
 ```
+
+## Overlap & Balance #3
+
+- Matching is very good at addressing *partial* overlap.
+- Propensity score matching is theoretically good at addressing imbalance.
+  - Practically maybe not.
+- Weighting/Regression may be better at addressing imbalance solely.
+
+## Overlap & Balance #4
+
+- Overlap is easy to observe and quantify, and comes for "free" with matching,
+  so usually not a focus.
+- Balance is moderately hard to observe and quantify (especially in higher
+  dimensions) and will be the focus of matching
 
 ## Love plot
 
@@ -73,6 +81,8 @@ plot(balanceTest(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclear
 
 ## Distance
 
+- How "far away" are a pair of observations?
+    - Easy for 1 dimension, less clear for more dimensions.
 - Can define distance however you want
 - Common choices:
     - Euclidean
@@ -83,17 +93,18 @@ plot(balanceTest(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclear
 - Formal goal: Balance
     - Harder to define
     - Is often multi-dimensional
-- Instead, measure total distance within match
+- Instead, measure total distance within a matched set
 - Strong correlation between balance and distance
 
 ## Propensity Score Matching
 
 - Matching on more than one covariate is challenging.
 
-$ps(\mathbf{X}) = P(Z = 1 | \mathbf{X})$
+$$ps_i(\mathbf{X}_i) = P(Z_i = 1 | \mathbf{X}_i)$$
 
-- PS can be thought of as dimension reduction.
-- PS estimated by logistic regression predicting group membership.
+- Propensity scores can be thought of as dimension reduction.
+- Scores are usually estimated by logistic regression predicting group
+  membership.
     - "Kitchen sink"
 
 ## Main Benefit of PS matching
@@ -156,18 +167,28 @@ d$match
 summary(d$match)
 ```
 
+---
+
+
 - Can be used in analysis, for example (not executed):
 
 ```{r, eval = FALSE}
 lm(y ~ x1 + x2 + match, data = d)
+lm(y ~ x1 + x2, data = d[!is.na(d$match), ])
+lmer(y ~ x1 + x2 + (1|match), data = d)
 ```
+
+- Note that all of the above still used `x1` and `x2` *even though we matched
+  on them*.
+    - Balance vs overlap
+    - Doubly robust
 
 ## `RItools`
 
 - A collection of useful function for randomization inference
 - Most useful for `balanceTest` function
-    - Checks balance and `plot`ing the result of `balanceTest` will produce a Love plot.
-    - (`balanceTest` function being replaced with `balanceTest` function in development version, functionality remains almost identical, should be released in next few months.)
+    - Checks balance and `plot`ing the result of `balanceTest` will produce a
+      Love plot.
 
 ----
 
@@ -177,6 +198,8 @@ library(RItools)
 baltest <- balanceTest(group ~ x1 + x2, data = d)
 baltest
 ```
+
+- Null hypothesis is balance - we *don't* want to reject!
 
 ----
 
@@ -210,21 +233,21 @@ plot(baltest2) + geom_point(size = 5) +
 
 # Optimal and Full matching
 
-## Optimal matching
-
-- Greedy matching matches well on first few values, but can suffer later on, while a sub-optimal early match may improve later matches.
-    - Shuffle the data...
-- A optimal match is equivalent to considering **all** possible matching structures.
-- Optimal is a harder problem but almost always produces better matches
-- `optmatch` package uses optimal matching.
-- Distrust any method which uses greedy matching!
-
 ## `j`:`k` notation
 
 - Pair matched data is 1:1 - a single treatment to a single control.
 - 1:2 would mean each treatment member shares two controls.
 - 3:1 means three treatment members share a single control.
 - The optimal match will have all matched sets of size `j`:`k` where either `j` = 1 or `k` = 1.
+
+## Optimal matching
+
+- Greedy matching matches well on first few values, but can suffer later on, while a sub-optimal early match may improve later matches.
+    - Shuffle the data...
+- A optimal match is equivalent to considering **all** possible matching structures.
+- Optimal is a harder problem but always produces better matches
+- `optmatch` package uses optimal matching.
+- Distrust any method which uses greedy matching!
 
 ## 1:`k` or `j`:1 matching
 
@@ -235,7 +258,7 @@ plot(baltest2) + geom_point(size = 5) +
 
 ## 1:`k` or `j`:1 matching in `optmatch`
 
-- `controls` argument to `pairmatch`
+- `controls` argument to `pairmatch` - # of controls per treated unit
     - 2, 3, 4, etc for 1:`k`.
     - 1/2, 1/3, 1/4, etc for `j`:1.
 
@@ -254,7 +277,8 @@ summary(d$match2)
 ----
 
 ```{r}
-baltest3 <- balanceTest(group ~ x1 + x2 + strata(match) + strata(match2),
+baltest3 <- balanceTest(group ~ x1 + x2 + strata(match2) +
+                          strata(match),
                      data = d)
 baltest3
 ```
@@ -281,7 +305,7 @@ pairmatch(group ~ x1 + x2, data = d, controls = 3)
 
 - Even with 1:`k`, can still lose up to \((n_c - k*n_t)\) data.
     - E.g., 10 treatment, 67 controls, 1:6 matching loses 7 controls.
-- Sometimes flexibility might help.
+- Can force bad matches just to meet goal. Flexibility might help.
 
 Treatment | Control
 :--------:|:------:
@@ -289,6 +313,39 @@ Treatment | Control
 10        |  5
           || 6
           || 11
+
+----
+
+Treatment | Control
+:--------:|:------:
+5         |  4
+10        |  5
+          || 6
+          || 11
+
+1:2 matching:
+
+Treatment | Control
+:--------:|:------:
+5         |  4, 5
+10        |  6, 11
+
+----
+
+Treatment | Control
+:--------:|:------:
+5         |  4
+10        |  5
+          || 6
+          || 11
+
+Flexible matched set sizes:
+
+Treatment | Control | Size
+:--------:|:------:|:---:|
+5         |  4, 5, 6 | 1:3
+10        |  11 | 1:1
+
 
 ## Fullmatching
 
@@ -318,9 +375,9 @@ summary(d$fullmatch2)
 ----
 
 ```{r}
-baltest4 <- balanceTest(group ~ x1 + x2 + strata(match) +
-                       strata(match2) + strata(fullmatch1) +
-                    strata(fullmatch2), data = d)
+baltest4 <- balanceTest(group ~ x1 + x2 + strata(fullmatch2) +
+                    strata(fullmatch1) + strata(match2) +
+                       strata(match), data = d)
 baltest4
 ```
 
@@ -361,6 +418,8 @@ m1
 ```{r, echo = FALSE}
 as.matrix(m1)
 ```
+
+- How do we induce `Inf` into the distance matrix?
 
 ## Exact Matching
 
@@ -451,10 +510,13 @@ m1 + c1
 
 ## Calipering one dimension
 
-- Sometimes you might want to caliper only one dimension rather than overall distance - e.g. only `x1`, not the combination of `x1` and `x2`.
+- Sometimes you might want to caliper only one dimension rather than overall
+  distance - e.g. only `x1`, not the combination of `x1` and `x2`.
 - Two steps process.
-    1. Generate a distance matrix for `x1` and caliper it (creating a matrix of 0's and Inf's.
-    2. Generate the distance matrix for `x1` and `x2` and add it to the caliper'd matrix from step 1.
+    1. Generate a distance matrix for `x1` and caliper it (creating a matrix of
+       `0`'s and `Inf`'s).
+    2. Generate the distance matrix for `x1` and `x2` and add it to the
+       caliper'd matrix from step 1.
 - Slightly different result than calipering overall distance.
 
 ## Combining it all
@@ -672,4 +734,11 @@ save$"p-value" <- ifelse(results[, "p-val"] < .001, "<.001", results[, "p-val"])
 pander(save)
 ```
 
-# Bibliography
+# Other Matching Methods
+
+- **quickmatch** - Generalized Full Matching, fast \& more than two groups
+- **cem** - Coarsened Exact matching, bins continuous variables and uses Exact
+  matching
+- The **MatchIt** package in R handles these and other forms of matching
+    - Including **optmatch**! (But the actual **optmatch** package allows more
+      flexiblity).
