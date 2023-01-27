@@ -1832,7 +1832,7 @@ document.addEventListener('DOMContentLoaded', function(e) {
 <section>
     <h1 class="title">Matching with R: Strategies for larger data</h1>
     <h2 class="author">Josh Errickson</h2>
-    <h3 class="date">Last updated: 26 January, 2023</h3>
+    <h3 class="date">Last updated: 27 January, 2023</h3>
 </section>
 
 <section id="outline" class="slide level2">
@@ -1917,6 +1917,7 @@ higher dimensions) and will be the focus of matching</li>
 <li>Is often multi-dimensional</li>
 </ul></li>
 <li>Instead, measure total distance within a matched set</li>
+<li>Goal: Minimize distance in matched sets</li>
 <li>Strong correlation between balance and distance</li>
 </ul>
 </section>
@@ -1928,6 +1929,8 @@ higher dimensions) and will be the focus of matching</li>
 <p><span class="math display">\[ps_i(\mathbf{X}_i) = P(Z_i = 1 |
 \mathbf{X}_i)\]</span></p>
 <ul>
+<li>Probability of an observation being in group 1 (usually treatment)
+given their characteristics.</li>
 <li>Propensity scores can be thought of as dimension reduction.</li>
 <li>Scores are usually estimated by logistic regression predicting group
 membership.

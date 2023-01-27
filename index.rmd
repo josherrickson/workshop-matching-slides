@@ -94,6 +94,7 @@ plot(balanceTest(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclear
     - Harder to define
     - Is often multi-dimensional
 - Instead, measure total distance within a matched set
+- Goal: Minimize distance in matched sets
 - Strong correlation between balance and distance
 
 ## Propensity Score Matching
@@ -102,6 +103,8 @@ plot(balanceTest(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclear
 
 $$ps_i(\mathbf{X}_i) = P(Z_i = 1 | \mathbf{X}_i)$$
 
+- Probability of an observation being in group 1 (usually treatment) given their
+  characteristics.
 - Propensity scores can be thought of as dimension reduction.
 - Scores are usually estimated by logistic regression predicting group
   membership.
@@ -120,7 +123,8 @@ $$ps_i(\mathbf{X}_i) = P(Z_i = 1 | \mathbf{X}_i)$$
 
 ## Matching without PS
 
-- If small number of covariates to match on relative to sample size, and covariates have good overlap, can match directly.
+- If small number of covariates to match on relative to sample size, and
+  covariates have good overlap, can match directly.
 - Treat PS as "just another" variable.
 
 ## PS without Matching
