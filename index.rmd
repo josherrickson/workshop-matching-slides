@@ -177,9 +177,9 @@ summary(d$match)
 - Can be used in analysis, for example (not executed):
 
 ```{r, eval = FALSE}
-lm(y ~ x1 + x2 + match, data = d)
-lm(y ~ x1 + x2, data = d[!is.na(d$match), ])
-lmer(y ~ x1 + x2 + (1|match), data = d)
+lm(y ~ group + x1 + x2 + match, data = d)
+lm(y ~ group + x1 + x2, data = d[!is.na(d$match), ])
+lmer(y ~ group + x1 + x2 + (1|match), data = d)
 ```
 
 - Note that all of the above still used `x1` and `x2` *even though we matched
@@ -569,6 +569,14 @@ table(ecls$catholic)
 
 ----
 
+```{r, eval = FALSE}
+catholic ~ race_white + race_black + race_hispanic +
+  race_asian + p5numpla + p5hmage + p5hdage +
+  w3momscr + w3dadscr + w3income + w3povrty +
+  p5fstamp
+```
+
+
 ```{r, echo = FALSE, cache = TRUE}
 eclscomplete <- ecls[complete.cases(ecls),]
 
@@ -701,6 +709,13 @@ plot(balanceTest(update(full_form,
 ```
 
 ----
+
+```{r, eval = FALSE}
+lmer(c5r2mtsc ~ catholic + race_white + race_black + race_hispanic +
+                race_asian + p5numpla + p5hmage + p5hdage +
+                w3momscr + w3dadscr + I(w3income/10^3) + w3povrty +
+                p5fstamp + (1 | match))
+```
 
 ```{r, echo = FALSE, message = FALSE}
 resp_form <- c5r2mtsc ~ catholic + race_white + race_black + race_hispanic + race_asian +

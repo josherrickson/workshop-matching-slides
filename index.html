@@ -2017,9 +2017,9 @@ membership, or <code>NA</code>.</li>
 <ul>
 <li>Can be used in analysis, for example (not executed):</li>
 </ul>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> match, <span class="at">data =</span> d)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y <span class="sc">~</span> x1 <span class="sc">+</span> x2, <span class="at">data =</span> d[<span class="sc">!</span><span class="fu">is.na</span>(d<span class="sc">$</span>match), ])</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">lmer</span>(y <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>match), <span class="at">data =</span> d)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y <span class="sc">~</span> group <span class="sc">+</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> match, <span class="at">data =</span> d)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y <span class="sc">~</span> group <span class="sc">+</span> x1 <span class="sc">+</span> x2, <span class="at">data =</span> d[<span class="sc">!</span><span class="fu">is.na</span>(d<span class="sc">$</span>match), ])</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">lmer</span>(y <span class="sc">~</span> group <span class="sc">+</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>match), <span class="at">data =</span> d)</span></code></pre></div>
 <ul>
 <li>Note that all of the above still used <code>x1</code> and
 <code>x2</code> <em>even though we matched on them</em>.
@@ -2648,6 +2648,10 @@ power.</li>
 </section>
 <section class="slide level2">
 
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>catholic <span class="sc">~</span> race_white <span class="sc">+</span> race_black <span class="sc">+</span> race_hispanic <span class="sc">+</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>  race_asian <span class="sc">+</span> p5numpla <span class="sc">+</span> p5hmage <span class="sc">+</span> p5hdage <span class="sc">+</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  w3momscr <span class="sc">+</span> w3dadscr <span class="sc">+</span> w3income <span class="sc">+</span> w3povrty <span class="sc">+</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>  p5fstamp</span></code></pre></div>
 <table style="width:53%;">
 <colgroup>
 <col style="width: 30%" />
@@ -2664,32 +2668,32 @@ power.</li>
 <tbody>
 <tr class="odd">
 <td style="text-align: center;">Pair match</td>
-<td style="text-align: center;">2.42</td>
+<td style="text-align: center;">2.39</td>
 <td style="text-align: center;">930</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">Pair match (1:2)</td>
-<td style="text-align: center;">7.8</td>
+<td style="text-align: center;">7.83</td>
 <td style="text-align: center;">1240</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">Full match (unres.)</td>
-<td style="text-align: center;">5.15</td>
+<td style="text-align: center;">5.14</td>
 <td style="text-align: center;">1342</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">Full match (restr.)</td>
-<td style="text-align: center;">101.7</td>
+<td style="text-align: center;">101.9</td>
 <td style="text-align: center;">1385</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">Full + Exact</td>
-<td style="text-align: center;">3.13</td>
+<td style="text-align: center;">3.24</td>
 <td style="text-align: center;">1348</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">PS Pair</td>
-<td style="text-align: center;">1.47</td>
+<td style="text-align: center;">1.48</td>
 <td style="text-align: center;">930</td>
 </tr>
 <tr class="odd">
@@ -2699,7 +2703,7 @@ power.</li>
 </tr>
 <tr class="even">
 <td style="text-align: center;">PSM + Exact</td>
-<td style="text-align: center;">2.35</td>
+<td style="text-align: center;">2.36</td>
 <td style="text-align: center;">1300</td>
 </tr>
 </tbody>
@@ -2719,6 +2723,10 @@ power.</li>
 </section>
 <section class="slide level2">
 
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lmer</span>(c5r2mtsc <span class="sc">~</span> catholic <span class="sc">+</span> race_white <span class="sc">+</span> race_black <span class="sc">+</span> race_hispanic <span class="sc">+</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>                race_asian <span class="sc">+</span> p5numpla <span class="sc">+</span> p5hmage <span class="sc">+</span> p5hdage <span class="sc">+</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>                w3momscr <span class="sc">+</span> w3dadscr <span class="sc">+</span> <span class="fu">I</span>(w3income<span class="sc">/</span><span class="dv">10</span><span class="sc">^</span><span class="dv">3</span>) <span class="sc">+</span> w3povrty <span class="sc">+</span></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>                p5fstamp <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> match))</span></code></pre></div>
 <table style="width:85%;">
 <colgroup>
 <col style="width: 30%" />
@@ -2746,42 +2754,42 @@ power.</li>
 </tr>
 <tr class="even">
 <td style="text-align: center;">Pair match</td>
-<td style="text-align: center;">2.42</td>
+<td style="text-align: center;">2.39</td>
 <td style="text-align: center;">930</td>
 <td style="text-align: center;">-1.51</td>
 <td style="text-align: center;">&lt;.001</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">Pair match (1:2)</td>
-<td style="text-align: center;">7.8</td>
+<td style="text-align: center;">7.83</td>
 <td style="text-align: center;">1240</td>
 <td style="text-align: center;">-1.69</td>
 <td style="text-align: center;">&lt;.001</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">Full match (unres.)</td>
-<td style="text-align: center;">5.15</td>
+<td style="text-align: center;">5.14</td>
 <td style="text-align: center;">1342</td>
 <td style="text-align: center;">-1.49</td>
 <td style="text-align: center;">&lt;.001</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">Full match (restr.)</td>
-<td style="text-align: center;">101.7</td>
+<td style="text-align: center;">101.9</td>
 <td style="text-align: center;">1385</td>
 <td style="text-align: center;">-1.48</td>
 <td style="text-align: center;">&lt;.001</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">Full + Exact</td>
-<td style="text-align: center;">3.13</td>
+<td style="text-align: center;">3.24</td>
 <td style="text-align: center;">1348</td>
 <td style="text-align: center;">-1.49</td>
 <td style="text-align: center;">&lt;.001</td>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">PS Pair</td>
-<td style="text-align: center;">1.47</td>
+<td style="text-align: center;">1.48</td>
 <td style="text-align: center;">930</td>
 <td style="text-align: center;">-1.63</td>
 <td style="text-align: center;">&lt;.001</td>
@@ -2795,7 +2803,7 @@ power.</li>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">PSM + Exact</td>
-<td style="text-align: center;">2.35</td>
+<td style="text-align: center;">2.36</td>
 <td style="text-align: center;">1300</td>
 <td style="text-align: center;">-1.48</td>
 <td style="text-align: center;">&lt;.001</td>
