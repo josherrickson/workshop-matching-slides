@@ -1,6 +1,8 @@
-build:
-	@rm -f _main.Rmd
-	Rscript -e "rmarkdown::render('index.Rmd')"
 
+.PHONY:default
+default:
+	quarto render
+
+.PHONY:open
 open:
-	open index.html
+	@open docs/index.html

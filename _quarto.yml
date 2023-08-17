@@ -1,0 +1,13 @@
+project:
+  type: website
+  output-dir: docs
+
+format:
+  revealjs:
+    theme: solarized
+    highlight: haddock
+    transition: none
+    slide_level: 2
+    reveal_options:
+      slideNumber: true
+      fig_caption: false
