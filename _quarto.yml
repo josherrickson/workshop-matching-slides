@@ -2,12 +2,19 @@ project:
   type: website
   output-dir: docs
 
+title: "Matching with R: Strategies for Larger Data"
+author: "Josh Errickson"
+date: last-modified
+
 format:
   revealjs:
     theme: solarized
     highlight: haddock
     transition: none
+    echo: true
+    bibliography: refs.bib
     slide_level: 2
     reveal_options:
       slideNumber: true
       fig_caption: false
+      fig_align: "center"
