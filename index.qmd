@@ -1,19 +1,7 @@
----
-title: "Matching with R: Strategies for larger data"
-author: Josh Errickson
-date: "Last updated: `r format(Sys.time(), '%d %B, %Y')`"
-output:
-  revealjs::revealjs_presentation:
-    theme: solarized
-    highlight: haddock
-    transition: none
-    slide_level: 2
-    reveal_options:
-      slideNumber: true
-      fig_caption: false
----
-
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
 options(digits = 4)
 library(lme4)
 library(lmerTest)
@@ -37,23 +25,31 @@ library(RItools)
 
 - Overlap: Are variables observed over the same range for both groups?
 
-```{r, echo = FALSE, out.height = 400, out.width=500}
+```{r}
+#| echo: false
+#| fig-align: center
 set.seed(1)
 x1 <- rnorm(100)
 x2 <- rnorm(100, 3)
 d <- data.frame(x = c(x1, x2), group = factor(rep(letters[1:2], each = 100)))
-ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
+ggplot(d, aes(x, fill = group), na.rm = TRUE) +
+  geom_density(alpha = 0.2) +
+  theme(text = element_text(size = 20))
 ```
 
 ## Overlap & Balance #2
 
 - Balance: Are the distributions of variables the same for both groups?
 
-```{r, echo = FALSE, out.height = 400, out.width=500}
+```{r}
+#| echo: false
+#| fig-align: center
 x1 <- rbeta(100, 2, 1)
 x2 <- rbeta(100, 1, 2)
 d <- data.frame(x = c(x1, x2), group = factor(rep(letters[1:2], each = 100)))
-ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
+ggplot(d, aes(x, fill = group), na.rm = TRUE) +
+  geom_density(alpha = 0.2) +
+  theme(text = element_text(size = 20))
 ```
 
 ## Overlap & Balance #3
@@ -72,10 +68,13 @@ ggplot(d, aes(x, fill = group), na.rm = TRUE) + geom_density(alpha = 0.2)
 
 ## Love plot
 
-```{r, echo = FALSE, message = FALSE}
+```{r}
+#| echo: false
+#| message: false
 data(nuclearplants)
-plot(balanceTest(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclearplants)) +
-  theme(legend.position = "off", text = element_text(size=20)) +
+plot(balanceTest(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt,
+                 data = nuclearplants)) +
+  theme(legend.position = "off", text = element_text(size = 20)) +
   geom_point(size=5)
 ```
 
@@ -97,11 +96,13 @@ plot(balanceTest(pr ~ cost + t1 + t2 + ne + ct + bw + cum.n + pt, data = nuclear
 - Goal: Minimize distance in matched sets
 - Strong correlation between balance and distance
 
-## Propensity Score Matching
+## Propensity Score Matching {.smaller}
 
 - Matching on more than one covariate is challenging.
 
-$$ps_i(\mathbf{X}_i) = P(Z_i = 1 | \mathbf{X}_i)$$
+$$
+    ps_i(\mathbf{X}_i) = P(Z_i = 1 | \mathbf{X}_i)
+$$
 
 - Probability of an observation being in group 1 (usually treatment) given their
   characteristics.
@@ -109,6 +110,8 @@ $$ps_i(\mathbf{X}_i) = P(Z_i = 1 | \mathbf{X}_i)$$
 - Scores are usually estimated by logistic regression predicting group
   membership.
     - "Kitchen sink"
+    - Potentially exclude variables associated with treatment but **not**
+      outcome. [@austin2011introduction, pp. 414-415]
 
 ## Main Benefit of PS matching
 
@@ -140,10 +143,17 @@ $$ps_i(\mathbf{X}_i) = P(Z_i = 1 | \mathbf{X}_i)$$
 
 ## `optmatch`
 
+::: {style="font-size: 70%;"}
+
+[@hansen2006optimal; @optmatch]
+
+:::
+
 - Package for optimal full matching (both terms to be defined).
 - Simplest form:
 
-```{r, echo = FALSE}
+```{r}
+#| echo: false
 d <- data.frame(group = c(0,0,0,0,0,0,0,0,1,1,1),
                 x1 = c(2,4,3,5,6,3,4,1,0,1,3),
                 x2 = c(3,2,1,2,3,1,2,4,6,4,7))
@@ -151,16 +161,19 @@ op <- options()
 options(str = strOptions(vec.len = 6))
 ```
 
-```{r, message = FALSE}
+```{r}
+#| message: false
 #install.packages("optmatch")
 library(optmatch)
 str(d)
 d$match <- pairmatch(group ~ x1 + x2, data = d)
 ```
 
-```{r, echo = FALSE}
+```{r}
+#| echo: false
 options(op)
 ```
+
 
 ----
 
@@ -176,18 +189,26 @@ summary(d$match)
 
 - Can be used in analysis, for example (not executed):
 
-```{r, eval = FALSE}
+```{r}
+#| eval: false
 lm(y ~ group + x1 + x2 + match, data = d)
 lm(y ~ group + x1 + x2, data = d[!is.na(d$match), ])
 lmer(y ~ group + x1 + x2 + (1|match), data = d)
 ```
 
-- Note that all of the above still used `x1` and `x2` *even though we matched
-  on them*.
+- Note that all of the above still used `x1` and `x2` *even though we matched on
+  them*.
     - Balance vs overlap
     - Doubly robust
 
 ## `RItools`
+
+::: {style="font-size: 70%;"}
+
+[@RItools]
+
+:::
+
 
 - A collection of useful function for randomization inference
 - Most useful for `balanceTest` function
@@ -196,7 +217,8 @@ lmer(y ~ group + x1 + x2 + (1|match), data = d)
 
 ----
 
-```{r, message = FALSE}
+```{r}
+#| message: false
 #install.packages("RItools")
 library(RItools)
 baltest <- balanceTest(group ~ x1 + x2, data = d)
@@ -207,10 +229,15 @@ baltest
 
 ----
 
-```{r, eval=FALSE}
+```{r}
+#| eval: false
 plot(baltest)
 ```
-```{r, echo = FALSE, message = FALSE, out.height = 500, out.width = 600}
+
+```{r}
+#| echo: false
+#| message: false
+#| fig-align: center
 plot(baltest) +
   theme(text = element_text(size=20), legend.position = "off") +
   geom_point(size = 5)
@@ -221,60 +248,64 @@ plot(baltest) +
 - Now compare the unmatched data to the matched data.
 
 ```{r}
+#| code-overflow: scroll
 baltest2 <- balanceTest(group ~ x1 + x2 + strata(match), data = d)
-baltest2
+print(baltest2, horizontal = FALSE)
 ```
 
 ----
 
-```{r, eval = FALSE}
+```{r}
+#| eval: false
 plot(baltest2)
 ```
-```{r, echo = FALSE, message = FALSE, out.height = 500, out.width = 600}
+
+```{r}
+#| echo: false
+#| message: false
+#| fig-align: center
 plot(baltest2) + geom_point(size = 5) +
   theme(legend.position = "bottom", text = element_text(size=20))
 ```
 
 # Optimal and Full matching
 
-## `j`:`k` notation
+## j:k notation
 
 - Pair matched data is 1:1 - a single treatment to a single control.
 - 1:2 would mean each treatment member shares two controls.
 - 3:1 means three treatment members share a single control.
-- The optimal match will have all matched sets of size `j`:`k` where either `j` = 1 or `k` = 1.
+- The optimal match will have all matched sets of size j:k where either j
+  = 1 or k = 1.
 
 ## Optimal matching
 
-- Greedy matching matches well on first few values, but can suffer later on, while a sub-optimal early match may improve later matches.
+- Greedy matching matches well on first few values, but can suffer later on,
+  while a sub-optimal early match may improve later matches.
     - Shuffle the data...
-- A optimal match is equivalent to considering **all** possible matching structures.
+- A optimal match is equivalent to considering **all** possible matching
+  structures.
 - Optimal is a harder problem but always produces better matches
 - `optmatch` package uses optimal matching.
 - Distrust any method which uses greedy matching!
 
-## 1:`k` or `j`:1 matching
+## 1:k or j:1 matching
 
 - Optimal pair matching useful if sample sizes are close - easy to interpret.
 - Not good if one group is much larger.
     - Loses data
-- 1:`k` or `j`:1 matching allows less data loss.
+- 1:k or j:1 matching allows less data loss.
 
-## 1:`k` or `j`:1 matching in `optmatch`
+## 1:k or j:1 matching in `optmatch`
 
 - `controls` argument to `pairmatch` - # of controls per treated unit
-    - 2, 3, 4, etc for 1:`k`.
-    - 1/2, 1/3, 1/4, etc for `j`:1.
+    - 2, 3, 4, etc for 1:k.
+    - 1/2, 1/3, 1/4, etc for j:1.
 
 ```{r}
 d$match2 <- pairmatch(group ~ x1 + x2,
                       controls = 2, data = d)
 d$match2
-```
-
-----
-
-```{r}
 summary(d$match2)
 ```
 
@@ -284,49 +315,70 @@ summary(d$match2)
 baltest3 <- balanceTest(group ~ x1 + x2 + strata(match2) +
                           strata(match),
                      data = d)
-baltest3
+print(baltest3, horizontal = FALSE)
 ```
 
 ----
 
-```{r, eval = FALSE}
+```{r}
+#| eval: false
 plot(baltest3)
 ```
-```{r, echo = FALSE, message = FALSE, out.height = 500, out.width = 600}
+```{r}
+#| echo: false
+#| message: false
+#| fig-align: center
 plot(baltest3) + geom_point(size = 5) +
   theme(legend.position = "bottom", text = element_text(size=20))
 ```
 
-----
+## Impossible matches fail
 
-```{r, error = TRUE}
+Setting up restrictions on matches that cannot be met produce an error:
+
+```{r}
+#| error: true
 pairmatch(group ~ x1 + x2, data = d, controls = 3)
 ```
 
+## Issues with 1:k or j:1 matching
 
-
-## Issues with 1:`k` or `j`:1 matching
-
-- Even with 1:`k`, can still lose up to \((n_c - k*n_t)\) data.
+- Even with 1:k, can still lose up to $(n_c - k*n_t)$ data.
     - E.g., 10 treatment, 67 controls, 1:6 matching loses 7 controls.
 - Can force bad matches just to meet goal. Flexibility might help.
 
+## An example
+
+:::: {.columns}
+
+::: {.column width="50%"}
 Treatment | Control
 :--------:|:------:
 5         |  4
 10        |  5
           || 6
           || 11
+:::
 
-----
+::: {.column width="50%"}
+:::
 
+::::
+
+## An example
+
+:::: {.columns}
+
+::: {.column width="50%"}
 Treatment | Control
 :--------:|:------:
 5         |  4
 10        |  5
           || 6
           || 11
+:::
 
+::: {.column width="50%"}
 1:2 matching:
 
 Treatment | Control
@@ -334,26 +386,39 @@ Treatment | Control
 5         |  4, 5
 10        |  6, 11
 
-----
+- 6 is a poor match for 10.
+:::
 
+::::
+
+## An example
+
+:::: {.columns}
+
+::: {.column width="50%"}
 Treatment | Control
 :--------:|:------:
 5         |  4
 10        |  5
           || 6
           || 11
+:::
 
+::: {.column width="50%"}
 Flexible matched set sizes:
 
-Treatment | Control | Size
-:--------:|:------:|:---:|
+Treatment | Control  | Size
+:--------:|:--------:|:---:
 5         |  4, 5, 6 | 1:3
-10        |  11 | 1:1
+10        |  11      | 1:1
+:::
+
+::::
 
 
 ## Fullmatching
 
-- Allow 1:`k` or `j`:1 where `k` or `j` can vary per matched set.
+- Allow 1:k or j:1 where k or j can vary per matched set.
 
 ```{r}
 d$fullmatch1 <- fullmatch(group ~ x1 + x2, data = d)
@@ -382,15 +447,19 @@ summary(d$fullmatch2)
 baltest4 <- balanceTest(group ~ x1 + x2 + strata(fullmatch2) +
                     strata(fullmatch1) + strata(match2) +
                        strata(match), data = d)
-baltest4
+print(baltest4, horizontal = FALSE)
 ```
 
 ----
 
-```{r, eval = FALSE}
+```{r}
+#| eval: false
 plot(baltest4)
 ```
-```{r, echo = FALSE, message = FALSE, out.height = 500, out.width = 600}
+```{r}
+#| echo: false
+#| message: false
+#| fig-align: center
 plot(baltest4) + geom_point(size = 5) +
   theme(legend.position = "bottom", text = element_text(size=20))
 ```
@@ -399,27 +468,35 @@ plot(baltest4) + geom_point(size = 5) +
 
 ## Distance Matrix
 
-```{r, echo = FALSE}
-dist <- matrix(c(1,4,0, Inf, 2, 5), nrow = 2)
-rownames(dist) <- c("t1", "t2")
-colnames(dist) <- c("c1", "c2", "c3")
+<center>
+```{r}
+#| echo: false
+#| panel: center
+dist <- matrix(c(1, 4, 0, Inf, 2,
+                 0, 5, 1, 5, Inf,
+                 6, 1, 4, 4, 3), nrow = 3, byrow = FALSE)
+rownames(dist) <- c("t1", "t2", "t3")
+colnames(dist) <- c("c1", "c2", "c3", "c4", "c5")
 dist
 ```
+</center>
 
 - Each entry represents a distance.
-- `0` represents identical, `Inf` represents never match.
+- `0` represents "identical", `Inf` represents never match.
 - The more `Inf`, the faster matching will run.
 
 ----
 
 - Built in `optmatch`, similar notation
 
-```{r, results = "hide"}
+```{r}
+#| results: "hide"
 m1 <- match_on(group ~ x1 + x2, data = d)
 m1
 ```
 
-```{r, echo = FALSE}
+```{r}
+#| echo: false
 as.matrix(m1)
 ```
 
@@ -427,7 +504,8 @@ as.matrix(m1)
 
 ## Exact Matching
 
-```{r, echo = FALSE}
+```{r}
+#| echo: false
 d <- d[,1:3]
 d$category <- c(0,1,1,0,0,1,0,1,1,0,1)
 op <- options()
@@ -438,11 +516,10 @@ options(str = strOptions(vec.len = 6))
 str(d)
 ```
 
-```{r, echo = FALSE}
+```{r}
+#| echo: false
 options(op)
 ```
-
-----
 
 ```{r}
 em <- exactMatch(group ~ category, data = d)
@@ -504,11 +581,6 @@ emmatch
 as.matrix(m1)
 c1 <- caliper(m1, width = 4)
 c1
-```
-
-----
-
-```{r}
 m1 + c1
 ```
 
@@ -533,21 +605,18 @@ mm
 
 - Looks like some unmatchable controls.
 
-----
-
 ```{r}
 summary(fullmatch(mm, data = d))
 ```
 
-- Yup, 3 unmatchable.
-
-## Discussion
+## Discussion {.smaller}
 
 - 3-way trade-off between balance, speed and effective sample size (power).
-    - More constraints on `j`:`k` leads to more power but is slower.
+    - More constraints on j:k leads to more power but is slower.
         - Too few constraints can limit usefulness.
         - May throw away a lot of data, negating power gain.
-    - More exact matching or calipering leads to faster but less balanced matches.
+    - More exact matching or calipering leads to faster but less balanced
+      matches.
         - Too many restrictions can reduce power.
         - Too few restrictions can limit usefulness.
     - Dropping observations leads to more balance matches with lower power.
@@ -557,30 +626,32 @@ summary(fullmatch(mm, data = d))
 ## ECLS data
 
 - Early Childhood Longitudinal Survey
-- Treatment group is catholic school vs public school.
-```{r, echo = FALSE}
+
+```{r}
+#| echo: false
 ecls <- read.csv("ecls/ecls.csv")
 ecls <- ecls[complete.cases(ecls),]
 ```
 ```{r}
 dim(ecls)
+```
+
+- Treatment group is catholic school vs public school.
+
+```{r}
 table(ecls$catholic)
 ```
 
-----
+## Simulation Results 1
 
-```{r, eval = FALSE}
-catholic ~ race_white + race_black + race_hispanic +
-  race_asian + p5numpla + p5hmage + p5hdage +
-  w3momscr + w3dadscr + w3income + w3povrty +
-  p5fstamp
-```
-
-
-```{r, echo = FALSE, cache = TRUE}
+```{r}
+#| echo: false
+#| cache: true
 eclscomplete <- ecls[complete.cases(ecls),]
 
-full_form <- catholic ~ race_white + race_black + race_hispanic + race_asian + p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr + w3income + w3povrty + p5fstamp
+full_form <- catholic ~ race_white + race_black + race_hispanic + race_asian +
+  p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr +
+  w3income + w3povrty + p5fstamp
 
 save <- matrix(nrow = 8, ncol = 3)
 colnames(save) <- c("Model",
@@ -654,17 +725,20 @@ save[8,] <- c("PSM + Exact",
               effectiveSampleSize(psm3))
 ```
 
-```{r, echo = FALSE}
+```{r}
+#| echo: false
 save <- as.data.frame(save, stringsAsFactors = FALSE)
 save$Time <- as.numeric(save$Time)
 save$ESS <- as.numeric(save$ESS)
-panderOptions('round', 2)
-pander(save)
+knitr::kable(save, digits = 2)
 ```
 
-----
+## Simulation Results 2
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
 labels <- c("Unmatched", "Pair", "1:2 Pair")
 plot(balanceTest(update(full_form,
                         . ~ . + strata(pm1) + strata(pm2)),
@@ -676,10 +750,14 @@ plot(balanceTest(update(full_form,
   theme(legend.position = "bottom", text = element_text(size=20))
 ```
 
-----
+## Simulation Results 3
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-labels <- c("Unmatched", "Fullmatch", "Fullmatch, Restrictions", "Fullmatch, Exactmatch")
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+labels <- c("Unmatched", "Fullmatch", "Fullmatch, Restrictions",
+            "Fullmatch, Exactmatch")
 plot(balanceTest(update(full_form,
                         . ~ . + strata(fm1) + strata(fm2) + strata(fm3)),
                  data = eclscomplete), absolute = TRUE,
@@ -691,11 +769,14 @@ plot(balanceTest(update(full_form,
   guides(color=guide_legend(nrow = 2,byrow = TRUE))
 ```
 
-----
+## Simulation Results 4
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-
-labels <- c("Unmatched", "PSM Pair", "PSM Full, Restrictions", "PSM Full, Exactmatch")
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+labels <- c("Unmatched", "PSM Pair", "PSM Full, Restrictions",
+            "PSM Full, Exactmatch")
 plot(balanceTest(update(full_form,
                         . ~ . + strata(psm1) + strata(psm2) + strata(psm3)),
                  data = eclscomplete), absolute = TRUE,
@@ -708,19 +789,15 @@ plot(balanceTest(update(full_form,
 
 ```
 
-----
+## Simulation Results 5 {.smaller}
 
-```{r, eval = FALSE}
-lmer(c5r2mtsc ~ catholic + race_white + race_black + race_hispanic +
-                race_asian + p5numpla + p5hmage + p5hdage +
-                w3momscr + w3dadscr + I(w3income/10^3) + w3povrty +
-                p5fstamp + (1 | match))
-```
 
-```{r, echo = FALSE, message = FALSE}
-resp_form <- c5r2mtsc ~ catholic + race_white + race_black + race_hispanic + race_asian +
-  p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr + I(w3income/10^3) +
-  w3povrty + p5fstamp
+```{r}
+#| echo: false
+#| message: false
+resp_form <- c5r2mtsc ~ catholic + race_white + race_black + race_hispanic +
+  race_asian + p5numpla + p5hmage + p5hdage + w3momscr + w3dadscr +
+  I(w3income/10^3) + w3povrty + p5fstamp
 save <- rbind(c(0, NA, NA), save)
 save[1,1] <- "Unmatched"
 
@@ -746,11 +823,11 @@ results <- rbind(summary(lm(resp_form,
                             data = eclscomplete))$coeff["catholic", c(1, 5)])
 colnames(results) <- c("Est. Coef", "p-val")
 
-save$"Est. coef" <- results[, 1]
+save$"Est. Coef" <- results[, 1]
 save$"p-value" <- ifelse(results[, "p-val"] < .001, "<.001", results[, "p-val"])
 
 
-pander(save)
+knitr::kable(save, digits = 2)
 ```
 
 # Other Matching Methods
@@ -761,3 +838,5 @@ pander(save)
 - The **MatchIt** package in R handles these and other forms of matching
     - Including **optmatch**! (But the actual **optmatch** package allows more
       flexiblity).
+
+## References

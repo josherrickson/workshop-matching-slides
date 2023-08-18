@@ -1,0 +1,261 @@
+[
+  {
+    "objectID": "index.html#outline",
+    "href": "index.html#outline",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Outline",
+    "text": "Outline\n\nReview of propensity scores and matching\nSeparating PS and matching\nIntroduction to optmatch\nOptimal and full matching\nSpeeding up matching\nFinal example"
+  },
+  {
+    "objectID": "index.html#overlap-balance-1",
+    "href": "index.html#overlap-balance-1",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Overlap & Balance #1",
+    "text": "Overlap & Balance #1\n\nOverlap: Are variables observed over the same range for both groups?"
+  },
+  {
+    "objectID": "index.html#overlap-balance-2",
+    "href": "index.html#overlap-balance-2",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Overlap & Balance #2",
+    "text": "Overlap & Balance #2\n\nBalance: Are the distributions of variables the same for both groups?"
+  },
+  {
+    "objectID": "index.html#overlap-balance-3",
+    "href": "index.html#overlap-balance-3",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Overlap & Balance #3",
+    "text": "Overlap & Balance #3\n\nMatching is very good at addressing partial overlap.\nPropensity score matching is theoretically good at addressing imbalance.\n\nPractically maybe not.\n\nWeighting/Regression may be better at addressing imbalance solely."
+  },
+  {
+    "objectID": "index.html#overlap-balance-4",
+    "href": "index.html#overlap-balance-4",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Overlap & Balance #4",
+    "text": "Overlap & Balance #4\n\nOverlap is easy to observe and quantify, and comes for “free” with matching, so usually not a focus.\nBalance is moderately hard to observe and quantify (especially in higher dimensions) and will be the focus of matching"
+  },
+  {
+    "objectID": "index.html#love-plot",
+    "href": "index.html#love-plot",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Love plot",
+    "text": "Love plot"
+  },
+  {
+    "objectID": "index.html#distance",
+    "href": "index.html#distance",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Distance",
+    "text": "Distance\n\nHow “far away” are a pair of observations?\n\nEasy for 1 dimension, less clear for more dimensions.\n\nCan define distance however you want\nCommon choices:\n\nEuclidean\nMahalanobis"
+  },
+  {
+    "objectID": "index.html#measuring-match-quality",
+    "href": "index.html#measuring-match-quality",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Measuring match quality",
+    "text": "Measuring match quality\n\nFormal goal: Balance\n\nHarder to define\nIs often multi-dimensional\n\nInstead, measure total distance within a matched set\nGoal: Minimize distance in matched sets\nStrong correlation between balance and distance"
+  },
+  {
+    "objectID": "index.html#propensity-score-matching",
+    "href": "index.html#propensity-score-matching",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Propensity Score Matching",
+    "text": "Propensity Score Matching\n\nMatching on more than one covariate is challenging.\n\n\\[\n    ps_i(\\mathbf{X}_i) = P(Z_i = 1 | \\mathbf{X}_i)\n\\]\n\nProbability of an observation being in group 1 (usually treatment) given their characteristics.\nPropensity scores can be thought of as dimension reduction.\nScores are usually estimated by logistic regression predicting group membership.\n\n“Kitchen sink”\nPotentially exclude variables associated with treatment but not outcome. (Austin 2011, 414–15)"
+  },
+  {
+    "objectID": "index.html#main-benefit-of-ps-matching",
+    "href": "index.html#main-benefit-of-ps-matching",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Main Benefit of PS matching",
+    "text": "Main Benefit of PS matching\n\nIf we can …\n\nObserve the true propensity score.\nHave an infinitely large sample size.\nCan pair observations that have identical PS’s.\n\n… then we get covariate balance on observed and unobserved covariates!\nOf course, not perfect, but better than nothing."
+  },
+  {
+    "objectID": "index.html#matching-without-ps",
+    "href": "index.html#matching-without-ps",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Matching without PS",
+    "text": "Matching without PS\n\nIf small number of covariates to match on relative to sample size, and covariates have good overlap, can match directly.\nTreat PS as “just another” variable."
+  },
+  {
+    "objectID": "index.html#ps-without-matching",
+    "href": "index.html#ps-without-matching",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "PS without Matching",
+    "text": "PS without Matching\n\nWeighting\nSubsetting\nStratafication\nTreating PS as a predictor in Regression\n…\nEach has it’s own pro’s and con’s."
+  },
+  {
+    "objectID": "index.html#optmatch",
+    "href": "index.html#optmatch",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "optmatch",
+    "text": "optmatch\n\n(Ben B. Hansen and Klopfer 2006; Ben B. Hansen et al. 2023)\n\n\nPackage for optimal full matching (both terms to be defined).\nSimplest form:\n\n\n#install.packages(\"optmatch\")\nlibrary(optmatch)\nstr(d)\n\n'data.frame':   11 obs. of  3 variables:\n $ group: num  0 0 0 0 0 0 0 0 1 1 1\n $ x1   : num  2 4 3 5 6 3 4 1 0 1 3\n $ x2   : num  3 2 1 2 3 1 2 4 6 4 7\n\nd$match &lt;- pairmatch(group ~ x1 + x2, data = d)"
+  },
+  {
+    "objectID": "index.html#ritools",
+    "href": "index.html#ritools",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "RItools",
+    "text": "RItools\n\n(Bowers et al. 2023)\n\n\nA collection of useful function for randomization inference\nMost useful for balanceTest function\n\nChecks balance and ploting the result of balanceTest will produce a Love plot."
+  },
+  {
+    "objectID": "index.html#jk-notation",
+    "href": "index.html#jk-notation",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "j:k notation",
+    "text": "j:k notation\n\nPair matched data is 1:1 - a single treatment to a single control.\n1:2 would mean each treatment member shares two controls.\n3:1 means three treatment members share a single control.\nThe optimal match will have all matched sets of size j:k where either j = 1 or k = 1."
+  },
+  {
+    "objectID": "index.html#optimal-matching",
+    "href": "index.html#optimal-matching",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Optimal matching",
+    "text": "Optimal matching\n\nGreedy matching matches well on first few values, but can suffer later on, while a sub-optimal early match may improve later matches.\n\nShuffle the data…\n\nA optimal match is equivalent to considering all possible matching structures.\nOptimal is a harder problem but always produces better matches\noptmatch package uses optimal matching.\nDistrust any method which uses greedy matching!"
+  },
+  {
+    "objectID": "index.html#k-or-j1-matching",
+    "href": "index.html#k-or-j1-matching",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "1:k or j:1 matching",
+    "text": "1:k or j:1 matching\n\nOptimal pair matching useful if sample sizes are close - easy to interpret.\nNot good if one group is much larger.\n\nLoses data\n\n1:k or j:1 matching allows less data loss."
+  },
+  {
+    "objectID": "index.html#k-or-j1-matching-in-optmatch",
+    "href": "index.html#k-or-j1-matching-in-optmatch",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "1:k or j:1 matching in optmatch",
+    "text": "1:k or j:1 matching in optmatch\n\ncontrols argument to pairmatch - # of controls per treated unit\n\n2, 3, 4, etc for 1:k.\n1/2, 1/3, 1/4, etc for j:1.\n\n\n\nd$match2 &lt;- pairmatch(group ~ x1 + x2,\n                      controls = 2, data = d)\nd$match2\n\n [1] 1.2  1.1  &lt;NA&gt; 1.3  1.3  &lt;NA&gt; 1.1  1.2  1.1  1.2  1.3 \n\nsummary(d$match2)\n\nStructure of matched sets:\n1:2 0:1 \n  3   2 \nEffective Sample Size:  4 \n(equivalent number of matched pairs)."
+  },
+  {
+    "objectID": "index.html#impossible-matches-fail",
+    "href": "index.html#impossible-matches-fail",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Impossible matches fail",
+    "text": "Impossible matches fail\nSetting up restrictions on matches that cannot be met produce an error:\n\npairmatch(group ~ x1 + x2, data = d, controls = 3)\n\nError in fullmatch.matrix(x = x, min.controls = controls, max.controls = controls, : negative 'omit.fraction' with 'min.controls' &gt;= 2 not permitted"
+  },
+  {
+    "objectID": "index.html#issues-with-1k-or-j1-matching",
+    "href": "index.html#issues-with-1k-or-j1-matching",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Issues with 1:k or j:1 matching",
+    "text": "Issues with 1:k or j:1 matching\n\nEven with 1:k, can still lose up to \\((n_c - k*n_t)\\) data.\n\nE.g., 10 treatment, 67 controls, 1:6 matching loses 7 controls.\n\nCan force bad matches just to meet goal. Flexibility might help."
+  },
+  {
+    "objectID": "index.html#an-example",
+    "href": "index.html#an-example",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "An example",
+    "text": "An example\n\n\n\n\n\nTreatment\nControl\n\n\n\n\n5\n4\n\n\n10\n5\n\n\n\n6\n\n\n\n11"
+  },
+  {
+    "objectID": "index.html#an-example-1",
+    "href": "index.html#an-example-1",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "An example",
+    "text": "An example\n\n\n\n\n\nTreatment\nControl\n\n\n\n\n5\n4\n\n\n10\n5\n\n\n\n6\n\n\n\n11\n\n\n\n\n1:2 matching:\n\n\n\nTreatment\nControl\n\n\n\n\n5\n4, 5\n\n\n10\n6, 11\n\n\n\n\n6 is a poor match for 10."
+  },
+  {
+    "objectID": "index.html#an-example-2",
+    "href": "index.html#an-example-2",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "An example",
+    "text": "An example\n\n\n\n\n\nTreatment\nControl\n\n\n\n\n5\n4\n\n\n10\n5\n\n\n\n6\n\n\n\n11\n\n\n\n\nFlexible matched set sizes:\n\n\n\nTreatment\nControl\nSize\n\n\n\n\n5\n4, 5, 6\n1:3\n\n\n10\n11\n1:1"
+  },
+  {
+    "objectID": "index.html#fullmatching",
+    "href": "index.html#fullmatching",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Fullmatching",
+    "text": "Fullmatching\n\nAllow 1:k or j:1 where k or j can vary per matched set.\n\n\nd$fullmatch1 &lt;- fullmatch(group ~ x1 + x2, data = d)\nsummary(d$fullmatch1)\n\nStructure of matched sets:\n 1:1 1:5+ \n   2    1 \nEffective Sample Size:  3.7 \n(equivalent number of matched pairs).\n\n\n\nGuaranteed to find the best possible match.\nBest may not be useful: 99:1 and 1:99.\n\nAlso lowers power (ESS)"
+  },
+  {
+    "objectID": "index.html#distance-matrix",
+    "href": "index.html#distance-matrix",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Distance Matrix",
+    "text": "Distance Matrix\n\n\n\n   c1  c2 c3  c4 c5\nt1  1 Inf  5 Inf  4\nt2  4   2  1   6  4\nt3  0   0  5   1  3\n\n\n\n\nEach entry represents a distance.\n0 represents “identical”, Inf represents never match.\nThe more Inf, the faster matching will run."
+  },
+  {
+    "objectID": "index.html#exact-matching",
+    "href": "index.html#exact-matching",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Exact Matching",
+    "text": "Exact Matching\n\nstr(d)\n\n'data.frame':   11 obs. of  4 variables:\n $ group   : num  0 0 0 0 0 0 0 0 1 1 1\n $ x1      : num  2 4 3 5 6 3 4 1 0 1 3\n $ x2      : num  3 2 1 2 3 1 2 4 6 4 7\n $ category: num  0 1 1 0 0 1 0 1 1 0 1\n\n\n\nem &lt;- exactMatch(group ~ category, data = d)\nas.matrix(em)\n\n       control\ntreated   1   2   3   4   5   6   7   8\n     9  Inf   0   0 Inf Inf   0 Inf   0\n     10   0 Inf Inf   0   0 Inf   0 Inf\n     11 Inf   0   0 Inf Inf   0 Inf   0\n\n\n\nMore useful than just adding a lot of Inf’s…"
+  },
+  {
+    "objectID": "index.html#calipering",
+    "href": "index.html#calipering",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Calipering",
+    "text": "Calipering\n\nFor any pairs with large distances, we may want to either\n\nEnsure they never match.\n\n(Overall match may suffer, but no individual match is terrible.)\n\nSpeed up calculations by not checking them."
+  },
+  {
+    "objectID": "index.html#calipering-one-dimension",
+    "href": "index.html#calipering-one-dimension",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Calipering one dimension",
+    "text": "Calipering one dimension\n\nSometimes you might want to caliper only one dimension rather than overall distance - e.g. only x1, not the combination of x1 and x2.\nTwo steps process.\n\nGenerate a distance matrix for x1 and caliper it (creating a matrix of 0’s and Inf’s).\nGenerate the distance matrix for x1 and x2 and add it to the caliper’d matrix from step 1.\n\nSlightly different result than calipering overall distance."
+  },
+  {
+    "objectID": "index.html#combining-it-all",
+    "href": "index.html#combining-it-all",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Combining it all",
+    "text": "Combining it all\n\nmm &lt;- match_on(group ~ x1 + x2, data = d,\n               within = em, caliper = 4)\nmm\n\n$`0`\n       control\ntreated     1     4     5     7\n     10 1.046 2.996 3.235 2.506\n\n$`1`\n       control\ntreated   2   3   6     8\n     9  Inf Inf Inf 1.809\n     11 Inf Inf Inf 2.919\n\n\n\nLooks like some unmatchable controls.\n\n\nsummary(fullmatch(mm, data = d))\n\nStructure of matched sets:\n2:1 1:4 0:1 \n  1   1   3 \nEffective Sample Size:  2.9 \n(equivalent number of matched pairs)."
+  },
+  {
+    "objectID": "index.html#discussion",
+    "href": "index.html#discussion",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Discussion",
+    "text": "Discussion\n\n3-way trade-off between balance, speed and effective sample size (power).\n\nMore constraints on j:k leads to more power but is slower.\n\nToo few constraints can limit usefulness.\nMay throw away a lot of data, negating power gain.\n\nMore exact matching or calipering leads to faster but less balanced matches.\n\nToo many restrictions can reduce power.\nToo few restrictions can limit usefulness.\n\nDropping observations leads to more balance matches with lower power."
+  },
+  {
+    "objectID": "index.html#ecls-data",
+    "href": "index.html#ecls-data",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "ECLS data",
+    "text": "ECLS data\n\nEarly Childhood Longitudinal Survey\n\n\ndim(ecls)\n\n[1] 5429   21\n\n\n\nTreatment group is catholic school vs public school.\n\n\ntable(ecls$catholic)\n\n\n   0    1 \n4499  930"
+  },
+  {
+    "objectID": "index.html#simulation-results-1",
+    "href": "index.html#simulation-results-1",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Simulation Results 1",
+    "text": "Simulation Results 1\n\n\n\n\n\nModel\nTime\nESS\n\n\n\n\nPair match\n3.67\n930\n\n\nPair match (1:2)\n26.76\n1240\n\n\nFull match (unres.)\n19.16\n1342\n\n\nFull match (restr.)\n595.68\n1386\n\n\nFull + Exact\n8.04\n1347\n\n\nPS Pair\n8.49\n930\n\n\nPS Full\n70.43\n1299\n\n\nPSM + Exact\n10.19\n1290"
+  },
+  {
+    "objectID": "index.html#simulation-results-2",
+    "href": "index.html#simulation-results-2",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Simulation Results 2",
+    "text": "Simulation Results 2"
+  },
+  {
+    "objectID": "index.html#simulation-results-3",
+    "href": "index.html#simulation-results-3",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Simulation Results 3",
+    "text": "Simulation Results 3"
+  },
+  {
+    "objectID": "index.html#simulation-results-4",
+    "href": "index.html#simulation-results-4",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Simulation Results 4",
+    "text": "Simulation Results 4"
+  },
+  {
+    "objectID": "index.html#simulation-results-5",
+    "href": "index.html#simulation-results-5",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "Simulation Results 5",
+    "text": "Simulation Results 5\n\n\n\n\n\nModel\nTime\nESS\nEst. Coef\np-value\n\n\n\n\nUnmatched\nNA\nNA\n-1.48\n&lt;.001\n\n\nPair match\n3.67\n930\n-1.51\n&lt;.001\n\n\nPair match (1:2)\n26.76\n1240\n-1.70\n&lt;.001\n\n\nFull match (unres.)\n19.16\n1342\n-1.49\n&lt;.001\n\n\nFull match (restr.)\n595.68\n1386\n-1.48\n&lt;.001\n\n\nFull + Exact\n8.04\n1347\n-1.49\n&lt;.001\n\n\nPS Pair\n8.49\n930\n-1.63\n&lt;.001\n\n\nPS Full\n70.43\n1299\n-1.48\n&lt;.001\n\n\nPSM + Exact\n10.19\n1290\n-1.48\n&lt;.001"
+  },
+  {
+    "objectID": "index.html#references",
+    "href": "index.html#references",
+    "title": "Matching with R: Strategies for Larger Data",
+    "section": "References",
+    "text": "References\n\n\n\n\n\n\nAustin, Peter C. 2011. “An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies.” Multivariate Behavioral Research 46 (3): 399–424.\n\n\nBowers, Jake, Mark Fredrickson, Ben Hansen, and Josh Errickson. 2023. RItools: Randomization Inference Tools. https://CRAN.R-project.org/package=RItools.\n\n\nHansen, Ben B, Mark Fredrickson, Josh Errickson, Josh Buckner, and Adam Rauh. 2023. Optmatch: Functions for Optimal Matching. https://CRAN.R-project.org/package=optmatch.\n\n\nHansen, Ben B., and Stephanie Olsen Klopfer. 2006. “Optimal Full Matching and Related Designs via Network Flows.” Journal of Computational and Graphical Statistics 15 (3): 609–27."
+  }
+]
