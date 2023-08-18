@@ -250,12 +250,5 @@
     "title": "Matching with R: Strategies for Larger Data",
     "section": "Simulation Results 5",
     "text": "Simulation Results 5\n\n\n\n\n\nModel\nTime\nESS\nEst. Coef\np-value\n\n\n\n\nUnmatched\nNA\nNA\n-1.48\n&lt;.001\n\n\nPair match\n3.67\n930\n-1.51\n&lt;.001\n\n\nPair match (1:2)\n26.76\n1240\n-1.70\n&lt;.001\n\n\nFull match (unres.)\n19.16\n1342\n-1.49\n&lt;.001\n\n\nFull match (restr.)\n595.68\n1386\n-1.48\n&lt;.001\n\n\nFull + Exact\n8.04\n1347\n-1.49\n&lt;.001\n\n\nPS Pair\n8.49\n930\n-1.63\n&lt;.001\n\n\nPS Full\n70.43\n1299\n-1.48\n&lt;.001\n\n\nPSM + Exact\n10.19\n1290\n-1.48\n&lt;.001"
-  },
-  {
-    "objectID": "index.html#references",
-    "href": "index.html#references",
-    "title": "Matching with R: Strategies for Larger Data",
-    "section": "References",
-    "text": "References\n\n\n\n\n\n\nAustin, Peter C. 2011. “An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies.” Multivariate Behavioral Research 46 (3): 399–424.\n\n\nBowers, Jake, Mark Fredrickson, Ben Hansen, and Josh Errickson. 2023. RItools: Randomization Inference Tools. https://CRAN.R-project.org/package=RItools.\n\n\nHansen, Ben B, Mark Fredrickson, Josh Errickson, Josh Buckner, and Adam Rauh. 2023. Optmatch: Functions for Optimal Matching. https://CRAN.R-project.org/package=optmatch.\n\n\nHansen, Ben B., and Stephanie Olsen Klopfer. 2006. “Optimal Full Matching and Related Designs via Network Flows.” Journal of Computational and Graphical Statistics 15 (3): 609–27."
   }
 ]

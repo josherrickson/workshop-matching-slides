@@ -839,4 +839,4 @@ knitr::kable(save, digits = 2)
     - Including **optmatch**! (But the actual **optmatch** package allows more
       flexiblity).
 
-## References
+# References
